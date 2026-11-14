@@ -7,6 +7,7 @@ import {
   planeStars,
 } from "../catalog";
 import { power, upgradeCost, type Save, devices } from "../data";
+import { getWeapon, defaultLoadout } from "../arsenal";
 import { aircraft, companionArt, svgUrl } from "../art";
 export type HangarFilter = {
   query: string;
@@ -42,6 +43,7 @@ export function hangarHTML(
 ) {
   const p = planes[preview],
     owned = save.owned.includes(p.id),
+    loadout = save.loadouts[p.id] ?? defaultLoadout(p.id),
     level = save.levels[p.id] || 1,
     mult = 1 + (level - 1) * 0.16,
     locked = p.tier > 1 + Math.floor(save.unlocked / 4);
@@ -61,7 +63,12 @@ export function hangarHTML(
     `<div class="spec"><span>${label}</span><b>${value}</b><i style="--stat:${Math.min(100, percent)}%"></i></div>`;
   return `<section class="page hangar-page"><div class="page-heading"><div><div class="eyebrow">HANGAR / DIVISÃO DE ENGENHARIA</div><h2>Força aérea, <em>à sua maneira.</em></h2></div><span class="collection-count">${save.owned.length}<small> / ${planes.length} AERONAVES</small></span></div>
  <div class="hangar-detail" style="--rarity:${rarityColors[p.rarity]}"><div class="showroom"><div class="hangar-light"></div><div class="landing-pad"></div><span class="showroom-code">SS / ${String(p.id + 1).padStart(3, "0")}<small>${p.propeller ? "TURBOÉLICE" : "PROPULSÃO A JATO"}</small></span>${planeImage(p.id, "showroom-plane")}<div class="showroom-footer"><span>VISTA SUPERIOR / ${p.collection.toLocaleUpperCase("pt-BR")}</span>${btn(save.favorites.includes(p.id) ? "★" : "☆", "favorite:" + p.id, "favorite")}</div></div>
- <div class="aircraft-specs"><div class="spec-top">${badge(p)}<span>TIER ${p.tier}</span></div><h2>${p.name}</h2><p>${p.description}</p><div class="power-strip"><span>PODER TOTAL<strong>${power(save, p.id)}</strong></span><span>NÍVEL<strong>${level} <small>${"★".repeat(planeStars(level))}</small></strong></span></div><div class="specs-grid">${stat("VIDA", Math.round(p.hp * mult), (p.hp * mult) / 4)}${stat("DANO", (p.damage * mult).toFixed(1), p.damage * mult * 2)}${stat("VELOCIDADE", p.speed, p.speed / 5)}${stat("CADÊNCIA", ((1000 / p.rate) * (1 + (level - 1) * 0.06)).toFixed(1) + "/s", (1000 / p.rate) * 8)}</div><div class="armament"><span>PRIMÁRIA <b>${p.weapon}</b></span><span>SECUNDÁRIA <b>${p.secondary}</b></span></div>${p.special ? `<div class="exclusive"><b>TEMPESTADE VERDE</b><span>Rajadas auriverdes + 2 mísseis guiados · ESPAÇO</span></div>` : ""}
+ <div class="aircraft-specs"><div class="spec-top">${badge(p)}<span>TIER ${p.tier}</span></div><h2>${p.name}</h2><p>${p.description}</p><div class="power-strip"><span>PODER TOTAL<strong>${power(save, p.id)}</strong></span><span>NÍVEL<strong>${level} <small>${"★".repeat(planeStars(level))}</small></strong></span></div><div class="specs-grid">${stat("VIDA", Math.round(p.hp * mult), (p.hp * mult) / 4)}${stat("DANO", (p.damage * mult).toFixed(1), p.damage * mult * 2)}${stat("VELOCIDADE", p.speed, p.speed / 5)}${stat("CADÊNCIA", ((1000 / p.rate) * (1 + (level - 1) * 0.06)).toFixed(1) + "/s", (1000 / p.rate) * 8)}</div><div class="armament"><span>PRIMÁRIA <b>${getWeapon(loadout.primary)!.name}</b></span><span>ARMAS DE ASA <b>${
+   [loadout.left, loadout.right]
+     .filter(Boolean)
+     .map((id) => getWeapon(id!)!.name)
+     .join(" / ") || "Sem equipamento"
+ }</b></span></div>${p.special ? `<div class="exclusive"><b>TEMPESTADE VERDE</b><span>Rajadas auriverdes + 2 mísseis guiados · ESPAÇO</span></div>` : ""}
  <div class="spec-actions">${owned ? btn(save.selected === p.id ? "AERONAVE EQUIPADA" : "EQUIPAR AERONAVE", "equip:" + p.id, "primary", save.selected === p.id) : btn(locked ? "LIBERE A MISSÃO " + ((p.tier - 1) * 4 + 1) : "ADQUIRIR · ◈ " + p.price, "buy:" + p.id, "primary", locked || save.coins < p.price)}${owned ? btn("MELHORAR · ◈ " + upgradeCost({ ...save, selected: p.id }), "upgrade:" + p.id, "outline", save.coins < upgradeCost({ ...save, selected: p.id })) : ""}</div><small class="hint">${owned ? "+16% vida e dano por nível; cadência +6% por nível." : "Prévia de catálogo. Compre para equipar e melhorar."}</small><div class="detail-tools">${btn("VER ARMAMENTO", "preview-skill:" + p.id, "text-button")}${btn(compare ? "FECHAR COMPARAÇÃO" : "COMPARAR COM EQUIPADA", "compare", "text-button", p.id === save.selected)}</div></div></div>
  ${
    compare && p.id !== save.selected

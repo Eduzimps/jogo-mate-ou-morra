@@ -1,85 +1,114 @@
-# SKY STRIKE 1945 — Ultimate / atualização 1
+# SKY STRIKE 1945 — Ultimate Brazil 2.5D · 1.3.0
 
-Shoot ’em up vertical original feito com **Phaser 3, TypeScript e Vite**. Campo lógico de 540 × 960, interface em português, controles por teclado/mouse/toque e progresso local. Sprites SVG e cenários são gerados pelo projeto; efeitos e trilhas são sintetizados com Web Audio. As fontes Barlow são distribuídas localmente por Fontsource (OFL).
+Shoot ’em up vertical original em **Phaser 3, TypeScript e Vite**, com campo lógico de 540 × 960, interface em português e controles para PC e celular. Esta versão reúne o arsenal customizável, loadouts por aeronave, treino gratuito, seis mapas brasileiros, partes destrutíveis de chefes, hangar ilustrado, áudio dinâmico e PWA.
+
+O conteúdo jogável atual é **13 aeronaves, 30 missões, quatro companheiros e cinco dispositivos legados**, além dos **31 armamentos** do novo arsenal. Os IDs antigos e a progressão existente foram preservados. A expansão anterior para 60 aeronaves e 100 missões não faz parte do conteúdo disponível nesta versão.
 
 ## Instalação e execução
 
-Requer Node.js 20.19+ ou 22.12+ (validado com Node 24).
+Requer Node.js 20.19+ ou 22.12+; validado com Node 24.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abra o endereço exibido pelo Vite (porta padrão 5173). O servidor aceita conexões em `0.0.0.0`. Neste ambiente, se o cache padrão do npm não for gravável, use `npm install --cache /workspace/.npm-cache`.
+O Vite escuta em `0.0.0.0:5173`. Se o cache padrão do npm não for gravável neste ambiente, use `npm install --cache /workspace/.npm-cache`.
 
 ```bash
 npm run build
 npm run preview
 ```
 
-O build fica em `dist/` e pode ser servido por qualquer hospedagem estática. Não abra `index.html` por `file://`. Nenhum backend, conta, chave de API ou serviço pago é necessário. O service worker é ativado apenas no build de produção, em HTTPS ou localhost, e permite reabrir offline os recursos já carregados. O primeiro acesso exige carregamento completo.
+O build fica em `dist/` e funciona em hospedagem estática. Não abra o HTML por `file://`. O jogo não exige backend, conta, API paga ou serviços externos durante as partidas; fontes, sprites, mapas e sons ficam no projeto.
 
-## Como jogar
+## Começar a jogar
 
-1. Escolha a aeronave no **Hangar**. A Sentinel inicial vem desbloqueada e há 1.200 moedas para melhorias.
-2. Abra **Campanha** e selecione uma missão disponível.
-3. Elimine as ondas e derrote o chefe para liberar a próxima missão.
-4. Use as moedas no hangar para comprar aviões, melhorar vida/dano/cadência ou aumentar o nível de companheiros e dispositivos.
+1. No **Hangar**, escolha sua aeronave. A P-41 Sentinel começa desbloqueada e há 1.200 moedas iniciais.
+2. Abra o **Arsenal** para comprar armamentos, melhorar seus níveis e equipar os cinco slots da aeronave.
+3. Use o **Campo de teste** para experimentar qualquer um dos 31 armamentos e seus níveis de 1/5 a 5/5, sem comprar ou gastar recursos.
+4. Na **Campanha**, vença missões para receber moedas e liberar a próxima fase. Volte ao hangar ou arsenal para evoluir seu equipamento.
 
-| Ação                                     | Controle                                           |
-| ---------------------------------------- | -------------------------------------------------- |
-| Mover                                    | WASD, setas ou movimento do mouse no campo         |
-| Mover no celular                         | Arrastar; avião aparece 75 unidades acima do toque |
-| Disparar                                 | Automático                                         |
-| Bomba, escudo, laser, mísseis, reparação | 1, 2, 3, 4, 5 ou botões na tela                    |
-| Pausar/continuar                         | Esc ou botão II                                    |
+| Ação                               | Controle                                                 |
+| ---------------------------------- | -------------------------------------------------------- |
+| Mover                              | WASD, setas ou movimento do mouse dentro do campo        |
+| Mover no celular                   | Arrastar; deslocamento acima do dedo ajustável em Opções |
+| Disparo principal e armas das asas | Automático                                               |
+| Especial do loadout                | Espaço ou botão na tela                                  |
+| Tático do loadout                  | T ou botão na tela                                       |
+| Cinco dispositivos legados         | Teclas 1–5 ou respectivos botões, conforme equipamento   |
+| Pausar/continuar                   | Esc ou botão II                                          |
 
-Equipe até três dispositivos. Cada um possui recarga independente. É possível trocar a seleção no hangar. A bomba limpa tiros inimigos; o escudo bloqueia danos; o laser causa dano contínuo; os mísseis buscam alvos; a reparação recupera vida. O jogo pausa ao perder foco.
+Os especiais, táticos e dispositivos possuem recargas. A partida pausa ao perder foco. As opções incluem resposta do ponteiro, deslocamento do avião acima do dedo, HUD ampliado, tremor de câmera e efeitos reduzidos.
 
-## Ultimate Brazil 2.5D — Etapa 1: Operação Guanabara
+## Arsenal e loadouts
 
-A missão de ID **0** agora é **Operação Guanabara**, no Rio de Janeiro. Duração, recompensa, desbloqueios e os IDs de todas as 30 missões foram preservados. As missões 1–29 continuam com seus cenários existentes. Esta entrega conclui o recorte do mapa do Rio; não implementa o arsenal customizável ou novos mapas brasileiros.
+Cada aeronave possui uma configuração salva separadamente: **principal, asa esquerda, asa direita, especial e tático**. Armas secundárias podem ser combinadas nas duas asas; as montagens aparecem na prévia e na batalha. Comprar uma arma não a equipa automaticamente: escolha o slot desejado no catálogo.
 
-A rota de 6.400 unidades é percorrida uma única vez: **oceano → costa de Copacabana → mata do Corcovado → sobrevoo do Cristo → defesa da Guanabara**. O cenário combina arte original de relevo, cidade e costa com água animada, barcos decorativos, nuvens independentes e sombras. A câmera do combate permanece fixa; apenas as camadas do cenário se deslocam. O trecho do Cristo desacelera o scroll, muda a sequência musical e suspende novas ondas para dar destaque ao marco. O chefe só entra após o sobrevoo.
+| Categoria    | Quantidade | Armamentos                                                                                                                        |
+| ------------ | ---------: | --------------------------------------------------------------------------------------------------------------------------------- |
+| Principais   |         10 | Metralhadora simples, dupla, canhão triplo, minigun, shotgun aérea, canhão pesado, laser, plasma, raio elétrico e canhão quântico |
+| Armas de asa |          7 | Foguetes, mísseis guiados, bombas, pods de metralhadora, plasma lateral, dispersores elétricos e drones                           |
+| Especiais    |          8 | Bomba, EMP, onda de choque, ataque orbital, Destruidor Ômega, Tempestade Verde, barragem de mísseis e super laser                 |
+| Táticos      |          6 | Escudo, reparação, turbo, refletor, barreira e campo de desaceleração                                                             |
 
-O Cristo é paisagem: não possui vida, arma, colisão nem recebe dano. A ilustração é uma interpretação artística, não um mapa cartográfico. Sua passagem ocorre abaixo das aeronaves, preservando os controles livres. As artes ficam em `public/assets/rio/` e somam aproximadamente **940 KiB**, em três WebP; nenhuma textura passa de 1.100px por eixo. A fase carrega esses recursos na GPU apenas quando selecionada. O service worker do build guarda as artes para permitir reabertura offline após a preparação inicial.
+Os níveis de arma são individuais no inventário e vão de **1/5 a 5/5**; melhorar uma arma beneficia as aeronaves que a equiparem. Dano, cadência, efeitos e força/duração aplicável evoluem de verdade. O catálogo mostra dano por disparo, cadência, DPS estimado, nível, custo e comparação com o equipamento atual. DPS é uma estimativa do padrão: acertos, explosões, alcance e quantidade de alvos alteram o resultado de uma batalha.
 
-Nenhuma alteração do formato de save foi necessária nesta etapa. Também foi corrigido um vazamento de sombras que ocorria no disparo de aeronaves com dispersão ou nível 4+: agora há uma única sombra por jogador.
+O treino utiliza o mesmo sistema de armas da campanha. Seus seletores permitem trocar armamento e nível durante a sessão; o reinício repõe os alvos. Treinar não muda moedas, recompensas, desbloqueios ou o loadout salvo.
 
-Validação adicional: `tests/rio-route.test.ts` verifica a linha do tempo, monotonicidade, desaceleração e sobrevoo antes do chefe; `tests/rio-browser.mjs` verifica as cinco seções renderizadas, profundidade, pausa, controles, cenário da missão seguinte, preservação de save antigo, limite de textura e regressão de alocações de sombras. Os testes de navegador avançam o tempo para tornar as transições determinísticas; isso não substitui uma revisão de balanceamento integral em celulares físicos.
+Os cinco dispositivos anteriores — bomba, escudo, laser, mísseis e reparação — foram mantidos com seus níveis e teclas. Eles coexistem com os slots especial e tático do novo arsenal.
 
-## Atualização Ultimate — primeira entrega
+## Campanha brasileira e combate
 
-A base existente foi preservada. Esta versão contém **13 aeronaves jogáveis**, não 60. As 12 originais conservam IDs, nomes, atributos de combate, preços e níveis. Cada uma ganhou uma silhueta vetorial própria com painéis, rebites, cockpit, armamento e transparência real. O BR-29 Falcão do Brasil usa o novo ID 12, custa 650 moedas e pode ser comprado desde a primeira missão.
+As seis primeiras missões receberam rotas próprias, sem mudar seus IDs, duração, recompensas ou requisitos de desbloqueio. As outras **24 missões** continuam disponíveis com seus cenários existentes.
 
-- **Tempestade Verde:** Espaço ou botão na batalha; rajadas durante dois segundos, finalizando em dois mísseis guiados. Recarga de 16 segundos; dano acompanha o nível.
-- **Hangar:** prévia sem compra automática, pesquisa, filtros por coleção/raridade/tier, favoritos, inventário, comparação, compra, equipar e melhorias. Prévia de armamento é informativa; o teste real acontece na batalha.
-- **Companheiros:** quatro sprites próprios; Kite usa dispersão, Ghost dispara projéteis de energia que atravessam até três alvos e Lynx usa mísseis guiados. A formação atual continua sendo uma dupla do mesmo tipo, sem dois slots independentes.
-- **HUD:** vida numérica e percentual, cores por estado, alerta crítico com som, barra azul de escudo e destaque das três fases do chefe. Botões não são recriados a cada atualização.
-- **Configurações:** efeitos reduzidos, tremor opcional, HUD ampliado, deslocamento do avião acima do dedo e sensibilidade do ponteiro.
-- **Lobby:** inventário, missões, eventos (resgate diário) e conquistas (os desafios existentes). Não foram anunciados novos modos fictícios.
-- **Recursos:** miniaturas 200px com carregamento preguiçoso; arte detalhada 640px no hangar; batalha rasteriza apenas a aeronave equipada a 160px e o companheiro a 80px. Os cenários foram mantidos.
+| ID  | Missão                       | Percurso                                                                            |
+| --- | ---------------------------- | ----------------------------------------------------------------------------------- |
+| 0   | Operação Guanabara           | Oceano, costa de Copacabana, mata do Corcovado, sobrevoo do Cristo e defesa da baía |
+| 1   | Operação Rio Negro           | Rio amazônico, pontes na floresta, pista camuflada e posto militar                  |
+| 2   | Operação Águas Douradas      | Alagados do Pantanal, passarelas, palafitas e forte ao pôr do sol                   |
+| 3   | Operação Eixo Monumental     | Avenidas de Brasília, arquitetura moderna, espelhos d’água e comando tecnológico    |
+| 4   | Operação Garganta do Diabo   | Cânion do Iguaçu, cataratas, pontes e complexo hidrelétrico                         |
+| 5   | Operação Fortaleza Atlântica | Mar aberto, arquipélago, muralhas costeiras e porto fortificado                     |
 
-### Proteção do progresso
+Os mapas são arte original em perspectiva aérea 2.5D, com água animada, nuvens, sombras e elementos de cenário. São interpretações artísticas, não mapas cartográficos. As camadas do mundo se deslocam sem mover a câmera de combate ou alterar as coordenadas de colisão. Apenas o mapa selecionado é carregado na GPU; os cinco novos WebP têm 512 × 1536 e somam cerca de 1,4 MB.
 
-A chave continua sendo `sky-strike`. O formato v1 migra para v2 e cria uma cópia byte a byte em `sky-strike.backup-v1`. Um save ilegível abre uma tela de recuperação e **não é substituído automaticamente**. É possível baixar o arquivo original, restaurar uma cópia anterior ou importar um JSON válido. Criar um novo progresso é uma ação explícita e preserva o original em `sky-strike.unreadable`.
+No Corcovado, a rolagem desacelera, a música muda e novas ondas dão espaço ao marco; o chefe entra depois do sobrevoo. O Cristo é apenas paisagem: não possui vida, arma, alvo ou colisão.
 
-Em **Opções**, exporte/importe backups JSON para transferir seu progresso. Antes de uma importação válida, o valor anterior fica em `sky-strike.before-import`. Arquivos inválidos são rejeitados sem alteração da chave principal. A versão anterior do jogo não deve voltar a ser publicada sobre saves v2, pois seu leitor v1 não conhece o novo formato.
+Os três arquétipos — **Fortaleza Voadora, Encouraçado de Guerra e Máquina de Destruição** — possuem três fases e partes independentes: canhão esquerdo, canhão direito e reator. Destruir um canhão interrompe os seus disparos. Ataques são anunciados visualmente, e o HUD mostra vida, fase e situação de cada parte.
 
-## Conteúdo implementado
+Os 12 perfis de inimigos, tanques, torres e navios continuam na campanha. Cenários incluem construções e veículos decorativos; nem todo objeto ilustrado é um alvo destrutível. Estrelas e recompensas continuam ligadas ao resultado da missão, com proteção contra duplicação da tela de resultado.
 
-- 13 aeronaves em quatro tiers, três famílias de armas, compras e melhorias; tiers abrem a cada quatro missões.
-- 30 missões configuradas com seis paletas/terrenos, dificuldade crescente e três classes de chefe com três fases por vida restante.
-- 12 perfis de inimigo com velocidades, resistência e padrões distintos; vários compartilham o sprite-base. Tanques, torres e navios possuem arte específica.
-- Quatro companheiros selecionáveis, dupla em formação e níveis individuais por tipo.
-- Cinco dispositivos melhoráveis, três dificuldades e recompensas de vitória/derrota.
-- Hangar, campanha, desafios, resgate diário por calendário local, configurações, pausa, vitória e derrota.
-- Estrelas por integridade restante: três com 100% de vida, duas com pelo menos 45%, uma abaixo disso.
-- Save em LocalStorage (`sky-strike`), sons e sequências musicais sintetizadas, fontes e arte locais.
-- Pool de projéteis, emissor de partículas reutilizado e descarte de entidades fora do campo.
+## Aeronaves, hangar e apresentação
 
-## Testes
+As 12 aeronaves originais mantêm seus IDs 0–11; o **BR-29 Falcão do Brasil** usa o ID 12, custa 650 moedas e pode ser comprado desde o início. A Tempestade Verde possui rajadas auriverdes e finalização com mísseis guiados. As aeronaves têm sprites transparentes, cockpit, armamento, painéis, sombras e inclinação em movimento.
+
+O lobby e o hangar usam arte original de uma base brasileira. O hangar mantém pesquisa, filtros, favoritos, comparação, compra, equipamento e melhorias; o arsenal acrescenta a montagem visual das armas. Raridade é metadado visual e não altera os atributos antigos por si só.
+
+Os quatro companheiros mantêm níveis por tipo: Wasp, Kite, Ghost e Lynx. A formação atual continua sendo uma dupla do tipo selecionado. O HUD apresenta vida numérica/percentual, estado estável/atenção/crítico, alerta sonoro e barra azul de escudo.
+
+## Áudio, qualidade e aplicativo instalável
+
+O Web Audio sintetiza sons e trilhas originais para lobby, hangar, campanha, batalha, treino, chefe, trecho do Cristo e resultados. Há barramentos separados para **volume geral, música, efeitos e interface**, limite de vozes e redução da música na pausa. O navegador desbloqueia o áudio após uma interação do jogador.
+
+Em **Opções**, a qualidade pode ser baixa, média ou alta. O modo baixo busca 30 FPS e reduz efeitos; o médio usa uma densidade intermediária de partículas e fumaça, e o alto usa a densidade completa. Médio e alto usam alvo de 60 FPS em hardware compatível. Isso define o comportamento do jogo, sem garantir essa taxa em todo aparelho.
+
+O build inclui manifesto, ícones e service worker para instalação como **PWA**, sem tornar a instalação obrigatória:
+
+- No Chrome compatível, use a opção **Instalar app** do navegador; o botão do jogo aparece quando o navegador disponibiliza a instalação.
+- No Safari do iPhone/iPad, use **Compartilhar → Adicionar à Tela de Início** quando disponível.
+
+O funcionamento offline exige o primeiro carregamento completo em HTTPS ou localhost. O service worker prepara os mapas, arte do hangar e recursos do aplicativo e mantém cache dos arquivos carregados. O armazenamento de progresso permanece local ao navegador/origem.
+
+## Salvamento e recuperação
+
+A chave continua sendo **`sky-strike`**. Saves v1 e v2 migram para **v3**, preservando moedas, gemas, IDs, aeronaves, seleção, níveis, companheiros, dispositivos, missões, estrelas, estatísticas e configurações. A migração acrescenta o arsenal e cria loadouts compatíveis com o equipamento anterior.
+
+Antes de migrar, o valor original é guardado em `sky-strike.backup-v1` ou `sky-strike.backup-v2`. Em **Opções**, é possível exportar/importar JSON. A importação valida posse, categorias, slots, níveis e dados financeiros; um arquivo inválido não substitui o progresso. Antes de uma importação válida, a cópia anterior fica em `sky-strike.before-import`.
+
+Se um save não puder ser lido, o jogo abre a recuperação e preserva os dados. É possível baixar o original, restaurar uma cópia anterior ou importar um backup. Criar um progresso novo é uma ação explícita e guarda o valor ilegível em `sky-strike.unreadable`. Evite republicar leitores antigos sobre saves v3, pois versões anteriores desconhecem a estrutura atual.
+
+## Validação
 
 ```bash
 npm test
@@ -90,27 +119,30 @@ npm run test:browser
 node tests/offline.mjs
 ```
 
-Os testes de domínio cobrem economia, compra duplicada, upgrades, persistência, desbloqueio, migração v1/v2 e importação atômica de backups. O teste de navegador usa Playwright e `/usr/bin/chromium`; use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` para outro executável. Capturas são geradas em `artifacts/` (ignorado pelo Git). A suíte verifica menus, teclado, mouse, toque emulado, habilidades, pausa, dano, fases de chefe, vitória, desbloqueio, derrota, reinício, filtros, favoritos, transparência dos 17 sprites, Tempestade Verde, recuperação de save e layouts em 1920×1080, 1366×768, 360×800, 390×844, 412×915 e tablet 768×1024. Para verificar transições de resultado de maneira determinística, o teste acelera a missão e altera a vida do chefe pelo acesso de diagnóstico disponível **somente no Vite de desenvolvimento**; ele não comprova o balanceamento de uma campanha completa.
+A validação desta entrega reúne **28 testes de domínio**, build e **cinco suítes de navegador**: fluxo base, Ultimate, Rio/mapas brasileiros, arsenal/treino/chefes e apresentação/áudio. Ela cobre economia, posse/compra duplicada, upgrades 1–5, loadouts, saves v1/v2/v3, recuperação, controle de recursos, fases/partes dos chefes e as telas de resultado.
+
+Os testes de interface usam Chromium/Playwright e incluem teclado, mouse, toque emulado, seis resoluções (1920×1080, 1366×768, 360×800, 390×844, 412×915 e tablet 768×1024), treino sem custo e reabertura offline em produção. Alguns testes avançam o relógio ou ajustam a vida de alvos pela interface de diagnóstico exclusiva do Vite de desenvolvimento para verificar transições de forma determinística.
+
+Use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` para outro Chromium. Os testes de navegador aceitam `SKY_STRIKE_DEV_URL` quando indicado pela suíte; o offline aceita `SKY_STRIKE_TEST_URL` para conferir o caminho do GitHub Pages. As capturas ficam em `artifacts/`, ignorado pelo Git.
 
 ## Estrutura
 
-- `src/main.ts`: navegação, interface, inventário, recompensas e ligação com a batalha.
-- `src/battle.ts`: cena Phaser, controles, armas, pool, IA, colisões, efeitos e chefes.
-- `src/data.ts`: catálogo, campanha, economia, melhorias e modelo de save.
-- `src/catalog.ts`: 13 aeronaves, raridades, descrições e companheiros.
-- `src/ui/hangar.ts`: catálogo filtrável, comparação e equipamentos.
-- `src/persistence.ts`: migração, cópias de recuperação e importação validada.
-- `src/art/aircraft.ts`: 13 silhuetas detalhadas e quatro companheiros em SVG original.
-- `src/art.ts`: acesso aos sprites, fortaleza, navio e veículos em SVG original.
-- `src/world/rioRoute.ts`: linha do tempo e deslocamento absoluto da missão do Rio.
-- `src/world/RioWorld.ts`: camadas, arte em chunks, água, nuvens e percurso do cenário.
-- `src/audio.ts`: síntese sonora e sequências musicais.
-- `src/style.css`: interface responsiva.
-- `public/sw.js`: cache offline do build.
-- `tests/`: testes de domínio e fluxos de navegador.
+- `src/main.ts`: navegação, telas, treino, recompensas e ligação com o Phaser.
+- `src/data.ts`, `src/catalog.ts`, `src/persistence.ts`: campanha, aeronaves, economia e migração segura.
+- `src/arsenal.ts`: 31 armamentos, níveis, compra, compatibilidade e loadouts.
+- `src/ui/arsenal.ts`, `src/ui/hangar.ts`: catálogo, comparação e prévias.
+- `src/battle.ts`: combate, inimigos, colisões, partes dos chefes e treino.
+- `src/combat/WeaponSystem.ts`: comportamento compartilhado das armas na campanha e no campo de teste.
+- `src/world/`: rotas, cenários, água, névoa e sombras.
+- `src/art/`, `public/assets/`: sprites e arte original otimizada; arquivos `ART.md` descrevem os recursos.
+- `src/audio.ts`: síntese, trilhas e barramentos de volume.
+- `public/manifest.webmanifest`, `public/icons/`, `public/sw.js`: instalação PWA e cache offline.
+- `tests/`: domínio, regressões, navegador e offline.
 
-## Limites desta versão e próximas etapas
+## Publicação e próximos mapas
 
-O escopo completo da Ultimate ainda não foi concluído; consulte [ROADMAP.md](ROADMAP.md) para a sequência técnica. Raridade é metadado visual nesta entrega e não muda os atributos antigos; a evolução por raridade ficará na etapa de balanceamento. Não há 60 aeronaves, 100 missões, 12 companheiros, novos modos, Gamepad API ou PWA instalável nesta entrega. O offline do build está preservado.
+O workflow existente em `.github/workflows/pages.yml` prepara e publica `dist/` no GitHub Pages a cada envio à `main`. O endereço configurado é [eduzimps.github.io/jogo-mate-ou-morra](https://eduzimps.github.io/jogo-mate-ou-morra/).
 
-Esta é uma versão arcade funcional com arte vetorial própria, não uma reprodução da produção artística das referências. A missão do Rio usa um percurso ilustrado próprio; as outras 29 combinam o gerador compartilhado de ondas com os cenários procedurais existentes. Não são 30 mapas desenhados à mão. Chefes mudam densidade e ritmo dos ataques, mas não têm componentes destrutíveis independentes. Evolução por estrelas é automática por nível; não há árvore de fusão. Gemas são recompensas de conquistas, sem loja de gemas. O desafio diário é um resgate, não uma lista renovada de objetivos. Ainda não há testes de balanceamento integral das 30 missões, benchmark de 60 FPS em celulares reais ou teste de áudio em dispositivos físicos. O build avisa sobre o tamanho do bundle do Phaser; isso não impede a compilação.
+O workflow executa testes de domínio, build, cinco suítes de navegador e offline antes de publicar. Depois da publicação, o job **Verify published game in Chromium** abre o endereço HTTPS, inicia os seis mapas brasileiros e testa o arsenal/treino sem rede. Acompanhe o resultado no [workflow](https://github.com/Eduzimps/jogo-mate-ou-morra/actions/workflows/pages.yml); um envio de código só é considerado validado publicamente quando todos os jobs terminam com sucesso.
+
+O pedido permite criar **ou planejar** os outros mapas brasileiros; os planos da Base Aérea Noturna, Serra, Zona Industrial e Arquipélago estão no [ROADMAP.md](ROADMAP.md). Eles não aparecem como mapas novos já disponíveis. Permanecem como validações externas o teste em Android/Safari físicos, a medição de FPS/temperatura em aparelhos reais e a revisão do balanceamento integral das 30 missões. O build pode avisar sobre o tamanho do bundle do Phaser sem impedir a compilação.

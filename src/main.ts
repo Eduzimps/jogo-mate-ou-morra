@@ -5,6 +5,19 @@ import "@fontsource/barlow-condensed/800.css";
 import Phaser from "phaser";
 import "./style.css";
 import "./ultimate.css";
+import "./arsenal.css";
+import "./presentation.css";
+import { arsenalHTML, type ArsenalFilter } from "./ui/arsenal";
+import {
+  weapons,
+  getWeapon,
+  getWeaponStats,
+  defaultLoadout,
+  purchaseWeapon,
+  upgradeWeapon,
+  equipWeapon,
+  type LoadoutSlot,
+} from "./arsenal";
 import { aircraft, svgUrl } from "./art";
 import {
   planes,
@@ -30,6 +43,23 @@ import {
   type HangarFilter,
 } from "./ui/hangar";
 import { readProgress, importProgress, SAVE_KEY } from "./persistence";
+document.documentElement.style.setProperty(
+  "--hangar-backdrop",
+  `url("${import.meta.env.BASE_URL}assets/hangar/brazil-hangar.webp")`,
+);
+let installPrompt: { prompt: () => Promise<void> } | undefined;
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  installPrompt = event as unknown as typeof installPrompt;
+  const button = document.getElementById("install-game");
+  if (button) {
+    button.hidden = false;
+    (button as HTMLButtonElement).disabled = false;
+  }
+});
+let arsenalPlane = 0;
+let arsenalCategory: ArsenalFilter = "all";
+let training = false;
 const root = document.querySelector<HTMLDivElement>("#app")!;
 const startup = readProgress(localStorage);
 let recovery = !!startup.error;
@@ -49,13 +79,19 @@ const persist = () => {
     toast("Não foi possível salvar. Exporte um backup nas configurações.");
   }
   audio.volume = save.volume;
+  audio.musicVolume = save.musicVolume;
+  audio.effectsVolume = save.effectsVolume;
+  audio.uiVolume = save.uiVolume;
 };
 audio.volume = save.volume;
+audio.musicVolume = save.musicVolume;
+audio.effectsVolume = save.effectsVolume;
+audio.uiVolume = save.uiVolume;
 const img = planeImage;
 const button = (label: string, action: string, cls = "", disabled = false) =>
   `<button class="${cls}" data-action="${action}" ${disabled ? "disabled" : ""}>${label}</button>`;
 function shell(content: string) {
-  root.innerHTML = `<div class="shell"><aside class="rail"><a class="brand" data-action="home">S<span>✦</span>S<small>SKY STRIKE / 1945</small></a><div class="rail-line"></div><span class="vertical">ESCADRÃO DE OPERAÇÕES ESPECIAIS</span><span class="rail-bottom">EST. 1945</span></aside><main><header><div class="breadcrumb">COMANDO AÉREO <span>/ ${({ home: "BASE DE OPERAÇÕES", hangar: "HANGAR", campaign: "CAMPANHA", missions: "MISSÕES", settings: "CONFIGURAÇÕES", inventory: "INVENTÁRIO", events: "EVENTOS", achievements: "CONQUISTAS" } as Record<string, string>)[tab] || "MELHORIAS"}</span></div><div class="wallet"><span class="coin">◈</span> ${save.coins.toLocaleString("pt-BR")} <span class="gem">◆</span> ${save.gems}</div></header>${content}<nav>${[
+  root.innerHTML = `<div class="shell"><aside class="rail"><a class="brand" data-action="home">S<span>✦</span>S<small>SKY STRIKE / 1945</small></a><div class="rail-line"></div><span class="vertical">ESCADRÃO DE OPERAÇÕES ESPECIAIS</span><span class="rail-bottom">EST. 1945</span></aside><main><header><div class="breadcrumb">COMANDO AÉREO <span>/ ${({ home: "BASE DE OPERAÇÕES", hangar: "HANGAR", campaign: "CAMPANHA", missions: "MISSÕES", settings: "CONFIGURAÇÕES", inventory: "INVENTÁRIO", arsenal: "ARSENAL", events: "EVENTOS", achievements: "CONQUISTAS" } as Record<string, string>)[tab] || "MELHORIAS"}</span></div><div class="wallet"><span class="coin">◈</span> ${save.coins.toLocaleString("pt-BR")} <span class="gem">◆</span> ${save.gems}</div></header>${content}<nav>${[
     ["home", "01", "BASE"],
     ["campaign", "02", "CAMPANHA"],
     ["hangar", "03", "HANGAR"],
@@ -69,6 +105,16 @@ function shell(content: string) {
 }
 function render() {
   persist();
+  audio.mode =
+    tab === "hangar" || tab === "arsenal"
+      ? "hangar"
+      : tab === "campaign"
+        ? "campaign"
+        : "menu";
+  if (tab === "arsenal") {
+    shell(arsenalHTML(save, arsenalPlane, arsenalCategory));
+    return;
+  }
   if (tab === "home") home();
   else if (["hangar", "upgrades", "inventory"].includes(tab)) hangar();
   else if (tab === "campaign") campaign();
@@ -79,6 +125,7 @@ function home() {
   const p = planes[save.selected];
   shell(`<section class="hero ultimate-hero"><div class="hero-copy"><div class="eyebrow"><i></i> ULTIMATE / ESQUADRÃO 01</div><h1>SKY<br>STRIKE<span>1945</span></h1><p class="lead">Sua aeronave. Seu esquadrão.<br>O próximo voo começa agora.</p><div class="hero-actions">${button("INICIAR MISSÃO <span>→</span>", "campaign", "primary")}${button("EXPLORAR HANGAR →", "hangar", "text-button")}</div><div class="service"><span>30</span> OPERAÇÕES <b>•</b><span>${planes.length}</span> AERONAVES <b>•</b> PROGRESSO LOCAL</div></div><div class="hero-art"><div class="hangar-light"></div><div class="landing-pad"></div><div class="radar r1"></div><div class="radar r2"></div><div class="coordinate">HANGAR 01 / SISTEMAS PRONTOS</div>${img(save.selected, "hero-plane")}<div class="aircraft-label"><small>${p.collection.toLocaleUpperCase("pt-BR")} / TIER ${p.tier}</small><h3>${p.name}</h3><span>NÍVEL ${save.levels[p.id] || 1} <b>★</b> PODER ${power(save)}</span><span class="rarity" style="--rarity:${rarityColors[p.rarity]}">${p.rarity}</span></div><span class="art-caption">ESQUADRÃO SKY STRIKE — VISTA SUPERIOR</span></div></section>
  <section class="lobby-shortcuts">${[
+   ["arsenal", "ARSENAL", "31 armas · loadout por avião"],
    ["inventory", "INVENTÁRIO", save.owned.length + " aeronaves na sua frota"],
    ["missions", "MISSÕES", "Objetivos e recompensas"],
    ["events", "EVENTOS", "Suprimentos diários"],
@@ -96,6 +143,13 @@ function home() {
 }
 function hangar() {
   shell(hangarHTML(save, preview, filter, compare));
+  document
+    .querySelector(".detail-tools")
+    ?.insertAdjacentHTML(
+      "beforeend",
+      button("PERSONALIZAR ARMAS", "arsenal:" + preview, "text-button") +
+        button("CAMPO DE TESTE", "train", "text-button"),
+    );
   const search = document.querySelector<HTMLInputElement>("#plane-search")!;
   search.value = filter.query;
   search.addEventListener("input", () => {
@@ -116,7 +170,7 @@ function hangar() {
 }
 function campaign() {
   shell(
-    `<section class="page"><div class="eyebrow">TEATRO DE OPERAÇÕES</div><h2>Conquiste os céus.</h2><p>30 missões · Rio de Janeiro + 6 regiões · 3 classes de chefes. Vença para avançar.</p><div class="mission-grid">${stages.map((s) => `<button data-action="start:${s.id}" class="mission ${s.id > save.unlocked ? "locked" : ""}" ${s.id > save.unlocked ? "disabled" : ""}><small>${stageRegion(s.id)}</small><strong>${String(s.id + 1).padStart(2, "0")}</strong><h3>${s.name}</h3><span>${"★".repeat(save.stars[s.id] || 0)}${"☆".repeat(3 - (save.stars[s.id] || 0))}</span><small>${s.id > save.unlocked ? "BLOQUEADA" : "DECOLAR →"} · ◈ ${s.reward}</small></button>`).join("")}</div></section>`,
+    `<section class="page"><div class="eyebrow">TEATRO DE OPERAÇÕES</div><h2>Conquiste os céus.</h2><p>30 missões · seis mapas brasileiros · chefes com partes destrutíveis. Vença para avançar.</p><div class="mission-grid">${stages.map((s) => `<button data-action="start:${s.id}" class="mission ${s.id > save.unlocked ? "locked" : ""}" ${s.id > save.unlocked ? "disabled" : ""}><small>${stageRegion(s.id)}</small><strong>${String(s.id + 1).padStart(2, "0")}</strong><h3>${s.name}</h3><span>${"★".repeat(save.stars[s.id] || 0)}${"☆".repeat(3 - (save.stars[s.id] || 0))}</span><small>${s.id > save.unlocked ? "BLOQUEADA" : "DECOLAR →"} · ◈ ${s.reward}</small></button>`).join("")}</div></section>`,
   );
 }
 const challenges = [
@@ -134,6 +188,9 @@ function missions() {
 }
 function settings() {
   shell(`<section class="page settings"><div class="eyebrow">SISTEMAS DE BORDO</div><h2>Seu voo. Suas regras.</h2><label>Dificuldade<select id="difficulty">${["Fácil", "Normal", "Difícil"].map((v) => `<option ${save.difficulty === v ? "selected" : ""}>${v}</option>`).join("")}</select></label><p>Altera resistência, velocidade e cadência inimiga.</p><label>Volume geral<input id="volume" type="range" min="0" max="1" step=".05" value="${save.volume}"></label>
+ <label>Música<input id="musicVolume" type="range" min="0" max="1" step=".05" value="${save.musicVolume}"></label><label>Efeitos<input id="effectsVolume" type="range" min="0" max="1" step=".05" value="${save.effectsVolume}"></label><label>Interface<input id="uiVolume" type="range" min="0" max="1" step=".05" value="${save.uiVolume}"></label>
+ <label>Qualidade gráfica<select id="quality"><option value="low" ${save.quality === "low" ? "selected" : ""}>Baixa / econômico</option><option value="medium" ${save.quality === "medium" ? "selected" : ""}>Média</option><option value="high" ${save.quality === "high" ? "selected" : ""}>Alta</option></select></label>
+ <button id="install-game" data-action="install-game" class="primary" ${!installPrompt ? "disabled" : ""}>INSTALAR NA TELA INICIAL</button><p>O jogo funciona no navegador sem instalação. No iPhone: Compartilhar → Adicionar à Tela de Início.</p>
  <h3>Acessibilidade e desempenho</h3>${[
    ["reducedEffects", "Efeitos reduzidos"],
    ["screenShake", "Tremor de câmera"],
@@ -145,13 +202,24 @@ function settings() {
    )
    .join("")}
  <label>Deslocamento acima do dedo <output id="offset-value">${save.touchOffset}px</output><input id="touchOffset" type="range" min="0" max="140" step="5" value="${save.touchOffset}"></label><label>Resposta do ponteiro <input id="sensitivity" type="range" min=".5" max="2" step=".1" value="${save.sensitivity}"></label>
- <h3>Controles</h3><p>WASD / setas ou mouse. No celular, arraste dentro do campo. Tiros automáticos. Teclas 1–5: dispositivos. Espaço: Tempestade Verde (BR-29). Esc: pausa.</p>
+ <h3>Controles</h3><p>WASD / setas ou mouse. No celular, arraste dentro do campo. Tiros automáticos. Teclas 1–5: dispositivos. Espaço: especial do loadout. T: dispositivo tático. Esc: pausa.</p>
  <h3>Seu progresso está com você.</h3><p>O progresso é salvo neste navegador. Exporte um arquivo para transferir a outro dispositivo ou guardar uma cópia.</p><div class="backup-actions">${button("EXPORTAR BACKUP JSON", "export", "primary")}<label class="file-button">IMPORTAR BACKUP<input type="file" id="import-save" accept=".json,application/json"></label></div><p>Ao importar, validamos o arquivo e guardamos uma cópia do progresso anterior. Saves antigos são migrados sem renumerar aeronaves ou missões.</p><p id="backup-status" role="status"></p></section>`);
   document.querySelector("#difficulty")?.addEventListener("change", (e) => {
     save.difficulty = (e.target as HTMLSelectElement).value;
     persist();
   });
-  for (const key of ["volume", "sensitivity", "touchOffset"] as const)
+  document.querySelector("#quality")?.addEventListener("change", (e) => {
+    save.quality = (e.target as HTMLSelectElement).value as Save["quality"];
+    persist();
+  });
+  for (const key of [
+    "volume",
+    "musicVolume",
+    "effectsVolume",
+    "uiVolume",
+    "sensitivity",
+    "touchOffset",
+  ] as const)
     document.querySelector("#" + key)?.addEventListener("input", (e) => {
       save[key] = Number((e.target as HTMLInputElement).value);
       if (key === "touchOffset")
@@ -186,14 +254,29 @@ function toast(t: string) {
     setTimeout(() => el.classList.remove("show"), 2200);
   }
 }
-function start(id: number) {
-  if (id > save.unlocked) return;
+function start(id: number, practice = false, weapon?: string, level = 1) {
+  if (practice)
+    weapon ??= (save.loadouts[save.selected] ?? defaultLoadout(save.selected))
+      .primary;
+  if (!practice && id > save.unlocked) return;
+  training = practice;
   mission = id;
   audio.paused = false;
   lastHud = 0;
   result = undefined;
   game?.destroy(true);
-  root.innerHTML = `<div class="battle-layout"><aside><div class="eyebrow">AO VIVO / OPERAÇÃO ${id + 1}</div><h1>SKY<br>STRIKE<span>1945</span></h1><h3>${stages[id].name}</h3><p>${stageRegion(id)}</p><div class="battle-instructions">MOVA · WASD / SETAS / MOUSE<br>HABILIDADES · 1—5<br>PAUSA · ESC</div>${button("ABORTAR MISSÃO", "abort", "outline")}</aside><div id="field" class="${save.largeHud ? "large-hud" : ""} ${save.reducedEffects ? "reduced-effects" : ""}"><div id="canvas"></div><div id="loading" role="status">PREPARANDO AERONAVE<span>Inicializando os sistemas de combate…</span></div><div id="hud"></div><div id="skillbar"></div><div id="route-caption" aria-live="polite"></div><div id="overlay"></div></div><aside class="right-aside"><small>SEU ESQUADRÃO</small>${img(save.selected)}<h3>${planes[save.selected].name}</h3><p>Poder ${power(save)}<br>${save.difficulty}</p><div class="eyebrow">OBJETIVOS</div><p>${id === 0 ? "Atravesse a costa.<br>Sobrevoe o Corcovado.<br>Defenda a Guanabara." : "Elimine as formações.<br>Sobreviva ao ataque.<br>Destrua o chefe."}</p></aside></div>`;
+  root.innerHTML = `<div class="battle-layout"><aside><div class="eyebrow">AO VIVO / OPERAÇÃO ${id + 1}</div><h1>SKY<br>STRIKE<span>1945</span></h1><h3>${stages[id].name}</h3><p>${stageRegion(id)}</p><div class="battle-instructions">MOVA · WASD / SETAS / MOUSE<br>DISPOSITIVOS · 1—5<br>ESPECIAL · ESPAÇO / TÁTICO · T<br>PAUSA · ESC</div>${button("ABORTAR MISSÃO", "abort", "outline")}</aside><div id="field" class="${save.largeHud ? "large-hud" : ""} ${save.reducedEffects ? "reduced-effects" : ""}"><div id="canvas"></div><div id="loading" role="status">PREPARANDO AERONAVE<span>Inicializando os sistemas de combate…</span></div><div id="hud"></div><div id="skillbar"></div><div id="route-caption" aria-live="polite"></div><div id="overlay"></div></div><aside class="right-aside"><small>SEU ESQUADRÃO</small>${img(save.selected)}<h3>${planes[save.selected].name}</h3><p>Poder ${power(save)}<br>${save.difficulty}</p><div class="eyebrow">OBJETIVOS</div><p>${id === 0 ? "Atravesse a costa.<br>Sobrevoe o Corcovado.<br>Defenda a Guanabara." : "Elimine as formações.<br>Sobreviva ao ataque.<br>Destrua o chefe."}</p></aside></div>`;
+  if (practice) {
+    document.querySelector(".battle-layout")?.classList.add("training-layout");
+    document.querySelector("#route-caption")!.innerHTML =
+      "<small>SIMULADOR / SEM RECOMPENSAS</small><strong>Campo de teste</strong>";
+    root
+      .querySelector("#field")
+      ?.insertAdjacentHTML(
+        "afterbegin",
+        `<div class="training-controls"><label>ARMAMENTO<select id="training-weapon">${weapons.map((w) => `<option value="${w.id}" ${weapon === w.id ? "selected" : ""}>${w.name}</option>`).join("")}</select></label><label>NÍVEL<select id="training-level">${[1, 2, 3, 4, 5].map((n) => `<option value="${n}" ${n === level ? "selected" : ""}>${n}/5</option>`).join("")}</select></label>${button("REINICIAR ALVOS", "reset-training", "outline")}${button("SAIR", "abort", "outline")}</div>`,
+      );
+  }
   const scene = new Battle();
   game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -203,7 +286,8 @@ function start(id: number) {
     backgroundColor: "#163d4e",
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: [],
-    render: { antialias: true },
+    render: { antialias: save.quality !== "low", pixelArt: false },
+    fps: { target: save.quality === "low" ? 30 : 60 },
     audio: { noAudio: true },
   });
   game.events.once("world-load-error", () => {
@@ -214,6 +298,9 @@ function start(id: number) {
   game.scene.add("battle", scene, true, {
     save,
     stage: id,
+    training: practice,
+    trainingWeapon: weapon,
+    trainingLevel: level,
     done: finish,
     hud: updateHud,
   });
@@ -234,6 +321,13 @@ function updateHud(b: Battle) {
       caption.innerHTML = `<small>OPERAÇÃO GUANABARA / BRASIL</small><strong>${state.label}</strong>${state.section === "christ" ? "<span>CORCOVADO / SOBREVOO DO MARCO</span>" : ""}`;
     }
     caption.classList.toggle("landmark-caption", state.section === "christ");
+    caption.hidden = b.paused || b.ended;
+  } else if (caption && b.brazilWorld) {
+    const state = b.brazilWorld.state;
+    if (caption.dataset.section !== String(state.section)) {
+      caption.dataset.section = String(state.section);
+      caption.innerHTML = `<small>${stageRegion(b.stage)}</small><strong>${state.label}</strong>`;
+    }
     caption.hidden = b.paused || b.ended;
   }
   const hud = document.querySelector("#hud");
@@ -263,12 +357,27 @@ function updateHud(b: Battle) {
   txt("hp-status", critical ? "CRÍTICA" : ratio < 0.5 ? "ATENÇÃO" : "ESTÁVEL");
   document.getElementById("hp-fill")!.style.width = ratio * 100 + "%";
   progress("hp-native", b.hp, b.maxHp);
-  txt("score-value", String(b.score).padStart(6, "0"));
-  txt("coins-value", "◈ " + b.coins);
+  txt(
+    "score-value",
+    b.training
+      ? Math.round(b.damageDealt) + " DMG"
+      : String(b.score).padStart(6, "0"),
+  );
+  txt("coins-value", b.training ? "TREINO GRATUITO" : "◈ " + b.coins);
   const shield = document.getElementById("shield-block")!;
   shield.hidden = b.shield <= 0;
   txt("shield-value", "ESCUDO / " + b.shield.toFixed(1) + "s");
-  progress("shield-progress", b.shield, 5 + save.deviceLevels[1]);
+  progress(
+    "shield-progress",
+    b.shield,
+    Math.max(
+      5 + save.deviceLevels[1],
+      b.loadout.tactical === "shield"
+        ? getWeaponStats(b.loadout.tactical, b.weaponLevel(b.loadout.tactical))
+            .duration
+        : 0,
+    ),
+  );
   progress("stage-progress", b.elapsed, stages[mission].duration);
   document.getElementById("critical-alert")!.hidden = !critical || b.ended;
   const boss = b.enemies.find((e) => e.boss);
@@ -283,10 +392,28 @@ function updateHud(b: Battle) {
     txt("boss-phase", "FASE " + boss.phase + "/3");
     txt(
       "boss-value",
-      Math.max(0, Math.ceil(boss.hp)) + " / " + Math.ceil(boss.max) + " HP",
+      Math.max(0, Math.ceil(boss.hp)) +
+        " / " +
+        Math.ceil(boss.max) +
+        " HP · ARMAS " +
+        (boss.parts?.filter((p) => !p.destroyed).length ?? 0) +
+        "/" +
+        (boss.parts?.length ?? 0),
     );
     progress("boss-progress", Math.max(0, boss.hp), boss.max);
     document.getElementById("bossbar")!.dataset.phase = String(boss.phase);
+    let partInfo = document.getElementById("boss-parts");
+    if (!partInfo) {
+      partInfo = document.createElement("div");
+      partInfo.id = "boss-parts";
+      document.getElementById("bossbar")!.append(partInfo);
+    }
+    partInfo.innerHTML = (boss.parts ?? [])
+      .map(
+        (p) =>
+          `<span class="${p.destroyed ? "part-destroyed" : ""}">${p.name}: ${p.destroyed ? "DESTRUÍDO" : Math.ceil((p.hp / p.max) * 100) + "%"}</span>`,
+      )
+      .join("");
   }
   const skills = document.querySelector("#skillbar")!;
   if (!skills.children.length)
@@ -300,13 +427,16 @@ function updateHud(b: Battle) {
           ),
         )
         .join("") +
-      (save.selected === 12
-        ? button(
-            '<small>ESPAÇO</small>Tempestade<b id="cooldown-special"></b>',
-            "special",
-            "skill brazil-skill",
-          )
-        : "");
+      button(
+        `<small>ESPAÇO</small><span id="special-name"></span><b id="cooldown-special"></b>`,
+        "special",
+        "skill brazil-skill",
+      ) +
+      button(
+        `<small>T</small><span id="tactical-name"></span><b id="cooldown-tactical"></b>`,
+        "tactical",
+        "skill",
+      );
   for (const i of save.equipped) {
     const el = skills.querySelector<HTMLButtonElement>(
       `[data-action="ability:${i}"]`,
@@ -317,16 +447,28 @@ function updateHud(b: Battle) {
       b.cooldowns[i] > 0 ? Math.ceil(b.cooldowns[i]) + "s" : "PRONTO",
     );
   }
-  if (save.selected === 12) {
-    const el = skills.querySelector<HTMLButtonElement>(
-      '[data-action="special"]',
-    )!;
-    el.disabled = b.specialCooldown > 0;
-    txt(
-      "cooldown-special",
-      b.specialCooldown > 0 ? Math.ceil(b.specialCooldown) + "s" : "PRONTO",
-    );
-  }
+  txt("special-name", getWeapon(b.loadout.special)!.name);
+  txt("tactical-name", getWeapon(b.loadout.tactical)!.name);
+  const specialButton = skills.querySelector<HTMLButtonElement>(
+    '[data-action="special"]',
+  )!;
+  specialButton.disabled = b.weapons.specialCooldown > 0;
+  txt(
+    "cooldown-special",
+    b.weapons.specialCooldown > 0
+      ? Math.ceil(b.weapons.specialCooldown) + "s"
+      : "PRONTO",
+  );
+  const tacticalButton = skills.querySelector<HTMLButtonElement>(
+    '[data-action="tactical"]',
+  )!;
+  tacticalButton.disabled = b.weapons.tacticalCooldown > 0;
+  txt(
+    "cooldown-tactical",
+    b.weapons.tacticalCooldown > 0
+      ? Math.ceil(b.weapons.tacticalCooldown) + "s"
+      : "PRONTO",
+  );
   const overlay = document.querySelector("#overlay")!;
   if (
     !result &&
@@ -338,7 +480,7 @@ function updateHud(b: Battle) {
       : "";
 }
 function finish(r: BattleResult) {
-  if (result) return;
+  if (result || training) return;
   result = r;
   save.stats.kills += r.kills;
   save.stats.bosses += r.bosses;
@@ -353,9 +495,9 @@ function finish(r: BattleResult) {
     save.stats.earned += amount;
   }
   persist();
-  audio.mode = "menu";
+  audio.mode = r.win ? "victory" : "defeat";
   audio.paused = false;
-  audio.tone(r.win ? 660 : 100, 0.7, "triangle");
+  audio.play(r.win ? "victory" : "defeat");
   document.querySelector("#overlay")!.innerHTML =
     `<div class="modal"><div class="eyebrow">RELATÓRIO DE VOO</div><h2>${r.win ? "Missão cumprida." : "Aeronave abatida."}</h2>${img(save.selected, "result-plane")}<p class="result-aircraft">${planes[save.selected].name}</p><div class="result-stars">${r.win ? "★".repeat(stars) + "☆".repeat(3 - stars) : "—"}</div><p>${r.score.toLocaleString("pt-BR")} pontos · ${r.kills} alvos</p><h3>◈ +${amount}</h3>${button(r.win ? "PRÓXIMA MISSÃO" : "TENTAR NOVAMENTE", "retry", "primary")}${button("VOLTAR AO HANGAR", "exit", "outline")}${button("VOLTAR AO LOBBY", "abort", "text-button")}</div>`;
 }
@@ -363,8 +505,8 @@ root.addEventListener("click", (e) => {
   const el = (e.target as HTMLElement).closest<HTMLElement>("[data-action]");
   if (!el || el.hasAttribute("disabled")) return;
   audio.start();
-  audio.tone(420, 0.06, "triangle", 0.12);
-  const [a, v] = el.dataset.action!.split(":");
+  audio.play("ui");
+  const [a, v, slot] = el.dataset.action!.split(":");
   if (
     [
       "home",
@@ -374,11 +516,16 @@ root.addEventListener("click", (e) => {
       "missions",
       "settings",
       "inventory",
+      "arsenal",
       "events",
       "achievements",
     ].includes(a)
   ) {
     tab = a;
+    if (a === "arsenal") {
+      arsenalPlane = planes[Number(v)] ? Number(v) : save.selected;
+      arsenalCategory = "all";
+    }
     if (a === "inventory") {
       filter = emptyFilter();
       filter.owned = true;
@@ -389,6 +536,34 @@ root.addEventListener("click", (e) => {
       preview = save.selected;
     }
     render();
+  } else if (a === "weapon-buy") {
+    if (purchaseWeapon(save, v)) {
+      render();
+      audio.play("purchase");
+      toast("Armamento adquirido.");
+    }
+  } else if (a === "weapon-upgrade") {
+    if (upgradeWeapon(save, v)) {
+      render();
+      audio.play("upgrade");
+      toast("Arma melhorada para " + save.weaponLevels[v] + "/5.");
+    }
+  } else if (a === "weapon-equip") {
+    if (equipWeapon(save, arsenalPlane, slot as LoadoutSlot, v)) {
+      render();
+      toast("Loadout salvo para " + planes[arsenalPlane].name);
+    }
+  } else if (a === "weapon-clear") {
+    if (equipWeapon(save, arsenalPlane, v as LoadoutSlot, null)) render();
+  } else if (a === "arsenal-category") {
+    arsenalCategory = v as ArsenalFilter;
+    render();
+  } else if (a === "train" || a === "train-weapon") {
+    start(0, true, a === "train-weapon" ? v : undefined, 1);
+  } else if (a === "reset-training") {
+    (game?.scene.getScene("battle") as Battle)?.resetTraining();
+  } else if (a === "install-game") {
+    void installPrompt?.prompt();
   } else if (a === "plane" || a === "discover") {
     preview = Number(v);
     if (a === "discover") {
@@ -437,9 +612,16 @@ root.addEventListener("click", (e) => {
     render();
   } else if (a === "preview-skill") {
     const p = planes[Number(v)];
+    const loadout = save.loadouts[p.id] ?? defaultLoadout(p.id);
+    const primary = getWeapon(loadout.primary)!;
+    const special = getWeapon(loadout.special)!;
+    const tactical = getWeapon(loadout.tactical)!;
+    const secondary = [loadout.left, loadout.right]
+      .map((id) => (id ? getWeapon(id)!.name : "Vazia"))
+      .join(" / ");
     const modal = document.createElement("div");
     modal.className = "dialog-backdrop";
-    modal.innerHTML = `<div class="modal arsenal-modal" role="dialog" aria-modal="true" aria-label="Armamento de ${p.name}"><div class="eyebrow">ARSENAL / ${p.name}</div><div class="weapon-preview">${img(p.id)}<i></i><i></i><i></i></div><h3>${p.weapon}</h3><p>${p.secondary}. ${p.special ? "Tempestade Verde: rajadas durante 2 segundos, finalizando com dois mísseis guiados. Recarga de 16 segundos." : "Disparo automático. Melhorias aumentam vida, dano e cadência."}</p>${button("FECHAR PRÉVIA", "close-dialog", "primary")}</div>`;
+    modal.innerHTML = `<div class="modal arsenal-modal" role="dialog" aria-modal="true" aria-label="Armamento de ${p.name}"><div class="eyebrow">ARSENAL / ${p.name}</div><div class="weapon-preview">${img(p.id)}<i></i><i></i><i></i></div><h3>${primary.name} · ${save.weaponLevels[primary.id] ?? 1}/5</h3><p>${primary.description}</p><p>Asas: ${secondary}.<br>Especial (Espaço): ${special.name}.<br>Tático (T): ${tactical.name}.</p>${button("FECHAR PRÉVIA", "close-dialog", "primary")}</div>`;
     root.append(modal);
     modal.querySelector("button")?.focus();
   } else if (a === "close-dialog") {
@@ -450,7 +632,9 @@ root.addEventListener("click", (e) => {
   } else if (a === "wingup") {
     const id = v === undefined ? save.wing : Number(v),
       cost = (save.wingLevels[id] || 1) * 200;
-    if (save.coins >= cost) {
+    if ((save.wingLevels[id] || 1) >= 100000) {
+      toast("Nível máximo atingido.");
+    } else if (save.coins >= cost) {
       save.coins -= cost;
       save.wingLevels[id] = (save.wingLevels[id] || 1) + 1;
       render();
@@ -468,7 +652,9 @@ root.addEventListener("click", (e) => {
   } else if (a === "deviceup") {
     const i = Number(v),
       c = save.deviceLevels[i] * 180;
-    if (save.coins >= c) {
+    if (save.deviceLevels[i] >= 100000) {
+      toast("Nível máximo atingido.");
+    } else if (save.coins >= c) {
       save.coins -= c;
       save.deviceLevels[i]++;
       render();
@@ -495,6 +681,7 @@ root.addEventListener("click", (e) => {
     download(startup.raw ?? "", "sky-strike-original.json");
   } else if (a === "restore-backup") {
     const raw =
+      localStorage.getItem(SAVE_KEY + ".backup-v2") ||
       localStorage.getItem(SAVE_KEY + ".backup-v1") ||
       localStorage.getItem(SAVE_KEY + ".before-import");
     if (raw) {
@@ -521,6 +708,8 @@ root.addEventListener("click", (e) => {
   } else if (a === "start") start(Number(v));
   else if (a === "special")
     (game?.scene.getScene("battle") as Battle)?.special();
+  else if (a === "tactical")
+    (game?.scene.getScene("battle") as Battle)?.tactical();
   else if (a === "ability")
     (game?.scene.getScene("battle") as Battle)?.ability(Number(v));
   else if (a === "pause")
@@ -530,15 +719,29 @@ root.addEventListener("click", (e) => {
   else if (a === "exit" || a === "abort") {
     game?.destroy(true);
     game = undefined;
+    if (training) {
+      training = false;
+      tab = "arsenal";
+    }
     result = undefined;
     audio.mode = "menu";
     audio.paused = false;
-    tab = a === "exit" ? "hangar" : "home";
+    tab = a === "exit" ? "hangar" : tab === "arsenal" ? "arsenal" : "home";
     render();
   }
 });
 root.addEventListener("change", async (e) => {
   const input = e.target as HTMLInputElement;
+  if (input.id === "training-weapon" || input.id === "training-level") {
+    const battle = game?.scene.getScene("battle") as Battle;
+    const id = (document.getElementById("training-weapon") as HTMLSelectElement)
+      .value;
+    const level = Number(
+      (document.getElementById("training-level") as HTMLSelectElement).value,
+    );
+    battle?.setTrainingWeapon(id, level);
+    return;
+  }
   if (input.id !== "import-save" || !input.files?.[0]) return;
   try {
     const file = input.files[0];

@@ -1,11 +1,21 @@
 const PREFIX = "sky-strike-rio-" + self.registration.scope + "-";
-const CACHE = PREFIX + "v1";
+const CACHE = PREFIX + "v2";
 const CORE = [
   "./",
   "./index.html",
   "./assets/rio/route-upper.webp",
   "./assets/rio/route-lower.webp",
   "./assets/rio/mountain-finale.webp",
+  "./assets/brazil/amazon.webp",
+  "./assets/brazil/pantanal.webp",
+  "./assets/brazil/brasilia.webp",
+  "./assets/brazil/iguacu.webp",
+  "./assets/brazil/atlantic.webp",
+  "./assets/hangar/brazil-hangar.webp",
+  "./manifest.webmanifest",
+  "./icons/sky-strike.svg",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
 ];
 self.addEventListener("install", (event) => {
   event.waitUntil(

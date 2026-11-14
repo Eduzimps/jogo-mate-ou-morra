@@ -10,8 +10,8 @@ export function readProgress(storage: StorageLike): {
   try {
     raw = storage.getItem(SAVE_KEY);
     const save = load(raw);
-    if (raw && JSON.parse(raw).version === 1) {
-      storage.setItem(SAVE_KEY + ".backup-v1", raw);
+    if (raw && [1, 2].includes(JSON.parse(raw).version)) {
+      storage.setItem(SAVE_KEY + ".backup-v" + JSON.parse(raw).version, raw);
     }
     return { save, raw };
   } catch (e) {

@@ -49,7 +49,7 @@ try {
   await page.goto("http://127.0.0.1:5173");
   const before = await page.evaluate(() => localStorage.getItem("sky-strike"));
   const migrated = JSON.parse(before);
-  assert.equal(migrated.version, 2);
+  assert.equal(migrated.version, 3);
   for (const key of Object.keys(legacy).filter((key) => key !== "version"))
     assert.deepEqual(migrated[key], legacy[key], key);
 
@@ -70,9 +70,20 @@ try {
     "Comboio Fantasma",
     "Céu Partido",
   ];
+  const brazilianNames = [
+    "Operação Rio Negro",
+    "Operação Águas Douradas",
+    "Operação Eixo Monumental",
+    "Operação Garganta do Diabo",
+    "Operação Fortaleza Atlântica",
+  ];
   for (const stage of stages.slice(1)) {
     assert.equal(stage.id, stages.indexOf(stage));
-    assert.equal(stage.name, oldNames[stage.id % 6]);
+    if (stage.id <= 5) assert.equal(stage.name, brazilianNames[stage.id - 1]);
+    else assert.equal(stage.name, oldNames[stage.id % 6]);
+    assert.equal(stage.environment, stage.id % 6);
+    assert.equal(stage.boss, stage.id % 3);
+    assert.equal(stage.difficulty, 1 + stage.id * 0.12);
     assert.equal(stage.reward, 350 + stage.id * 90);
     assert.equal(stage.duration, 48 + Math.min(stage.id, 12) * 2);
   }
@@ -207,9 +218,9 @@ try {
     "aborting the flight changed permanent progress",
   );
 
-  // Other 29 missions keep the previous scenery and combat flow.
+  // Later missions keep the previous scenery and combat flow.
   await page.getByRole("button", { name: /INICIAR MISSÃO/ }).click();
-  await page.locator('[data-action="start:1"]').click();
+  await page.locator('[data-action="start:6"]').click();
   await page.waitForFunction(
     () => !!window.__skyGame?.scene.getScene("battle")?.player,
   );
@@ -230,7 +241,12 @@ try {
   await page.evaluate(() => {
     const scene = window.__skyGame.scene.getScene("battle");
     for (let i = 0; i < 100; i++) {
-      scene.shot = -1;
+      scene.weapons.fire(
+        scene.loadout.primary,
+        scene.weaponLevel(scene.loadout.primary),
+        scene.player.x,
+        scene.player.y - 35,
+      );
       scene.update(0, 16);
     }
   });

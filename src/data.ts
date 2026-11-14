@@ -1,3 +1,13 @@
+import {
+  freshArsenal,
+  migrateArsenal,
+  defaultLoadout,
+  getWeapon,
+  categoryForSlot,
+  type LoadoutSlot,
+  type ArsenalState,
+} from "./arsenal";
+import { brazilRegionForStage, brazilRegions } from "./world/brazilRegions";
 import { planes } from "./catalog";
 export { planes, wingmen } from "./catalog";
 export const devices = ["Bomba", "Escudo", "Laser", "Mísseis", "Reparação"];
@@ -14,14 +24,16 @@ export const stages = Array.from({ length: 30 }, (_, i) => ({
   name:
     i === 0
       ? "Operação Guanabara"
-      : [
-          "Operação Aurora",
-          "Arquipélago Hostil",
-          "Asas de Aço",
-          "Linha de Fogo",
-          "Comboio Fantasma",
-          "Céu Partido",
-        ][i % 6],
+      : brazilRegionForStage(i)
+        ? brazilRegions[brazilRegionForStage(i)!].mission
+        : [
+            "Operação Aurora",
+            "Arquipélago Hostil",
+            "Asas de Aço",
+            "Linha de Fogo",
+            "Comboio Fantasma",
+            "Céu Partido",
+          ][i % 6],
   environment: i % 6,
   duration: 48 + Math.min(i, 12) * 2,
   reward: 350 + i * 90,
@@ -29,7 +41,11 @@ export const stages = Array.from({ length: 30 }, (_, i) => ({
   difficulty: 1 + i * 0.12,
 }));
 export const stageRegion = (id: number) =>
-  id === 0 ? "Rio de Janeiro · Brasil" : environments[stages[id].environment];
+  id === 0
+    ? "Rio de Janeiro · Brasil"
+    : brazilRegionForStage(id)
+      ? brazilRegions[brazilRegionForStage(id)!].label
+      : environments[stages[id].environment];
 export const enemyTypes = [
   "Scout",
   "Dart",
@@ -44,8 +60,8 @@ export const enemyTypes = [
   "Hunter",
   "Elite",
 ];
-export type Save = {
-  version: 2;
+export type Save = ArsenalState & {
+  version: 3;
   coins: number;
   gems: number;
   selected: number;
@@ -69,9 +85,13 @@ export type Save = {
   largeHud: boolean;
   touchOffset: number;
   sensitivity: number;
+  musicVolume: number;
+  effectsVolume: number;
+  uiVolume: number;
+  quality: "low" | "medium" | "high";
 };
 export const fresh = (): Save => ({
-  version: 2,
+  version: 3,
   coins: 1200,
   gems: 0,
   selected: 0,
@@ -95,6 +115,11 @@ export const fresh = (): Save => ({
   largeHud: false,
   touchOffset: 75,
   sensitivity: 1,
+  musicVolume: 0.6,
+  effectsVolume: 0.75,
+  uiVolume: 0.6,
+  quality: "medium",
+  ...freshArsenal(),
 });
 /** Strict migration: invalid data throws, so callers never overwrite an unreadable save. */
 export function load(raw: string | null): Save {
@@ -109,7 +134,7 @@ export function load(raw: string | null): Save {
     !s ||
     typeof s !== "object" ||
     Array.isArray(s) ||
-    ![1, 2].includes(s.version as number)
+    ![1, 2, 3].includes(s.version as number)
   )
     throw new Error("Versão de progresso não reconhecida.");
   const f = fresh();
@@ -197,7 +222,7 @@ export function load(raw: string | null): Save {
     throw new Error("Data inválida.");
   return {
     ...f,
-    version: 2,
+    version: 3,
     coins: num(s.coins, "moedas"),
     gems: num(s.gems ?? 0, "gemas"),
     selected,
@@ -221,12 +246,23 @@ export function load(raw: string | null): Save {
     largeHud: (s.largeHud ?? false) as boolean,
     touchOffset: num(s.touchOffset ?? 75, "deslocamento", 0, 140),
     sensitivity: num(s.sensitivity ?? 1, "sensibilidade", 0.5, 2, false),
+    musicVolume: num(s.musicVolume ?? 0.6, "música", 0, 1, false),
+    effectsVolume: num(s.effectsVolume ?? 0.75, "efeitos", 0, 1, false),
+    uiVolume: num(s.uiVolume ?? 0.6, "interface", 0, 1, false),
+    quality: validateQuality(s.quality),
+    ...migrateArsenal(s, owned),
   };
+}
+function validateQuality(value: unknown): Save["quality"] {
+  if (value === undefined) return "medium";
+  if (typeof value !== "string" || !["low", "medium", "high"].includes(value))
+    throw new Error("Qualidade inválida.");
+  return value as Save["quality"];
 }
 export const upgradeCost = (s: Save, id = s.selected) =>
   Math.round(180 * Math.pow(s.levels[id] || 1, 1.55));
 export function upgrade(s: Save, id = s.selected) {
-  if (!s.owned.includes(id)) return false;
+  if (!s.owned.includes(id) || (s.levels[id] || 1) >= 100000) return false;
   const cost = upgradeCost(s, id);
   if (s.coins < cost) return false;
   s.coins -= cost;
@@ -243,9 +279,38 @@ export function purchase(s: Save, id: number) {
     p.tier > 1 + Math.floor(s.unlocked / 4)
   )
     return false;
+  // Valid imported inventories can contain a smaller set than the original
+  // starter package. Never equip unowned defaults or grant equipment for free.
+  const loadout = defaultLoadout(id);
+  const previous = s.loadouts[s.selected];
+  const slots: LoadoutSlot[] = [
+    "primary",
+    "left",
+    "right",
+    "special",
+    "tactical",
+  ];
+  for (const slot of slots) {
+    const defaultWeapon = loadout[slot];
+    if (defaultWeapon === null || s.weaponOwned.includes(defaultWeapon))
+      continue;
+    const fallback = previous?.[slot];
+    if ((slot === "left" || slot === "right") && fallback === null) {
+      loadout[slot] = null;
+      continue;
+    }
+    if (
+      typeof fallback !== "string" ||
+      !s.weaponOwned.includes(fallback) ||
+      getWeapon(fallback)?.category !== categoryForSlot(slot)
+    )
+      return false;
+    loadout[slot] = fallback;
+  }
   s.coins -= p.price;
   s.owned.push(id);
   s.levels[id] = 1;
+  s.loadouts[id] = loadout;
   return true;
 }
 export function reward(s: Save, id: number, stars: number, coins: number) {

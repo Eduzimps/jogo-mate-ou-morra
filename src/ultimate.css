@@ -1545,3 +1545,106 @@ button:active:not(:disabled) {
     max-width: 270px;
   }
 }
+.lobby-shortcuts {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.training-controls {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 115px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 2fr 0.7fr;
+  gap: 7px;
+  padding: 10px;
+  background: #081f2ee8;
+  border: 1px solid #d0b77b66;
+}
+.training-controls label {
+  color: #afc9bf;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.training-controls select {
+  width: 100%;
+  font-size: 11px;
+  margin-top: 4px;
+  padding: 7px;
+}
+.training-controls button {
+  font-size: 9px;
+  padding: 9px;
+  min-height: 34px;
+}
+.training-layout .stage-progress {
+  display: none;
+}
+.training-layout #route-caption {
+  bottom: 100px;
+}
+.training-layout aside:first-child h3:before {
+  content: "SIMULADOR / ";
+  font-size: 12px;
+  color: var(--gold);
+}
+.skill > span {
+  display: block;
+  font-size: 9px;
+  line-height: 1.2;
+}
+.detail-tools {
+  flex-wrap: wrap;
+}
+.arsenal-entry {
+  margin-top: 15px;
+}
+@media (max-width: 760px) {
+  .lobby-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .skill {
+    font-size: 9px;
+    padding: 7px 3px;
+    min-height: 65px;
+  }
+  .skill > span {
+    font-size: 8px;
+  }
+  .training-controls {
+    top: 107px;
+    padding: 8px;
+  }
+  .training-controls button {
+    font-size: 8px;
+  }
+  #skillbar {
+    gap: 4px;
+    padding: 0 6px;
+  }
+  .skill small {
+    font-size: 8px;
+  }
+  .skill b {
+    font-size: 8px;
+  }
+}
+#boss-parts {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 6px;
+}
+#boss-parts span {
+  color: #e7b7a1;
+  font-size: 8px;
+  letter-spacing: 0.1px;
+  padding: 4px;
+  background: #ffffff08;
+}
+#boss-parts .part-destroyed {
+  color: #87c3b1;
+  text-decoration: line-through;
+  opacity: 0.7;
+}

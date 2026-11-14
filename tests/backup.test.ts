@@ -19,7 +19,7 @@ test("migration creates a byte-for-byte recovery copy before any later write", (
   const st = storage(raw);
   const r = readProgress(st);
   assert.equal(r.save?.coins, 4321);
-  assert.equal(r.save?.version, 2);
+  assert.equal(r.save?.version, 3);
   assert.equal(st.getItem(SAVE_KEY + ".backup-v1"), raw);
   assert.equal(st.getItem(SAVE_KEY), raw);
 });
