@@ -4,6 +4,7 @@ export class AudioEngine {
   timer?: number;
   mode = "menu";
   step = 0;
+  paused = false;
   start() {
     this.ctx ??= new AudioContext();
     void this.ctx.resume();
@@ -16,7 +17,12 @@ export class AudioEngine {
             : this.mode === "battle"
               ? [110, 130.8, 164.8, 146.8]
               : [130.8, 164.8, 196, 164.8];
-        this.tone(seq[this.step++ % 4], 0.22, "triangle", 0.12);
+        this.tone(
+          seq[this.step++ % 4],
+          0.22,
+          "triangle",
+          this.paused ? 0.025 : 0.12,
+        );
       }, 320);
   }
   tone(f: number, d = 0.08, type: OscillatorType = "sine", v = 0.2) {

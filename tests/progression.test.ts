@@ -47,8 +47,8 @@ test("victory unlocks next stage and preserves best stars", () => {
   assert.equal(s.stats.earned, 600);
 });
 test("invalid saves recover and campaign has 30 configured stages", () => {
-  assert.deepEqual(load("{broken"), fresh());
+  assert.throws(() => load("{broken"));
   assert.equal(stages.length, 30);
-  assert.equal(planes.length, 12);
+  assert.equal(planes.length, 13);
   assert.equal(new Set(stages.map((s) => s.environment)).size, 6);
 });

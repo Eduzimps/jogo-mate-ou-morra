@@ -1,0 +1,1468 @@
+/* Ultimate / stage 1: metal, light and useful space. */
+:root {
+  --green: #80d9a4;
+  --cyan: #7ddbe7;
+}
+button,
+input,
+select {
+  font-family: Barlow, Arial, sans-serif;
+}
+button {
+  min-height: 44px;
+}
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+[hidden] {
+  display: none !important;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+.page-heading h2 {
+  margin: 10px 0 0;
+  font-size: 42px;
+}
+.collection-count {
+  font:
+    54px "Barlow Condensed",
+    sans-serif;
+  color: var(--gold);
+}
+.collection-count small {
+  font:
+    10px Barlow,
+    sans-serif;
+  color: var(--muted);
+}
+.rarity {
+  display: inline-block !important;
+  color: var(--rarity) !important;
+  border: 1px solid color-mix(in srgb, var(--rarity) 40%, transparent);
+  background: color-mix(in srgb, var(--rarity) 10%, transparent);
+  padding: 5px 9px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  font-size: 10px !important;
+  letter-spacing: 1.5px;
+}
+.hero-art {
+  isolation: isolate;
+}
+.hero-plane {
+  width: 410px;
+  height: 410px;
+  filter: drop-shadow(15px 32px 15px #000a);
+  animation: aircraft-idle 7s ease-in-out infinite;
+}
+.hero .aircraft-label {
+  bottom: 0;
+  left: 25px;
+}
+.aircraft-label .rarity {
+  margin: 10px 0 0;
+}
+.hero {
+  min-height: 610px;
+}
+.hero-art .landing-pad {
+  bottom: 25px;
+}
+.hangar-light {
+  position: absolute;
+  width: 80%;
+  height: 85%;
+  top: 0;
+  left: 10%;
+  background: conic-gradient(
+    from 154deg at 50% 0,
+    transparent,
+    #a9d6cf14,
+    transparent 58deg
+  );
+  pointer-events: none;
+}
+.landing-pad {
+  position: absolute;
+  bottom: 12%;
+  left: 10%;
+  width: 80%;
+  height: 36%;
+  border: 1px solid #8dbfb533;
+  border-radius: 50%;
+  transform: rotate(-10deg);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 45px, #a4c2b70c 45px 46px),
+    radial-gradient(ellipse, #c4e8d116, transparent 70%);
+  box-shadow:
+    0 0 0 25px #add3c604,
+    inset 0 0 60px #07171c;
+  z-index: 0;
+}
+.lobby-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 25px 0;
+}
+.lobby-shortcuts button {
+  text-align: left;
+  position: relative;
+  background: #ffffff03;
+  padding: 20px 16px;
+}
+.lobby-shortcuts strong {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  display: block;
+}
+.lobby-shortcuts small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0;
+  margin-top: 8px;
+}
+.lobby-shortcuts button > span {
+  position: absolute;
+  right: 14px;
+  top: 17px;
+  color: var(--gold);
+}
+.briefing {
+  margin-bottom: 22px;
+}
+.brazil-banner {
+  display: flex;
+  gap: 25px;
+  align-items: center;
+  border: 1px solid #8eac6344;
+  background: linear-gradient(100deg, #83a44913, #ffffff02);
+  padding: 24px;
+  margin-bottom: 30px;
+}
+.brazil-mark {
+  font: 26px "Barlow Condensed";
+  padding: 12px;
+  border: 1px solid #d3bf6e66;
+  color: #e6c95f;
+  transform: skewY(-4deg);
+  background: #4e6f3b33;
+}
+.brazil-mark span {
+  display: block;
+  font-size: 18px;
+  letter-spacing: 3px;
+}
+.brazil-banner h3 {
+  margin: 8px 0 4px;
+}
+.brazil-banner p {
+  margin: 0;
+  font-size: 12px;
+}
+.brazil-banner button {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.hangar-detail {
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  background: #ffffff02;
+  align-items: stretch;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--rarity) 30%, transparent);
+  box-shadow: 0 24px 70px #0002;
+}
+.showroom {
+  position: relative;
+  min-height: 460px;
+  background:
+    radial-gradient(
+      ellipse at 50% 30%,
+      color-mix(in srgb, var(--rarity) 11%, transparent),
+      transparent 65%
+    ),
+    linear-gradient(110deg, #091c26, #152d33);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+.showroom:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 90px,
+    #7c9f9722 90px 92px
+  );
+  mask-image: linear-gradient(#000, transparent);
+  z-index: -1;
+}
+.showroom-plane {
+  width: 95%;
+  height: 420px;
+  object-fit: contain;
+  filter: drop-shadow(14px 28px 14px #000a);
+  transform: rotate(-12deg);
+  animation: hangar-entry 0.6s ease-out;
+}
+.showroom-code {
+  position: absolute;
+  top: 20px;
+  left: 22px;
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #b6c7bd;
+}
+.showroom-code small {
+  display: block;
+  margin-top: 8px;
+  font-size: 8px;
+  color: #77978f;
+  letter-spacing: 1px;
+}
+.showroom-footer {
+  position: absolute;
+  bottom: 12px;
+  left: 22px;
+  right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.showroom-footer > span {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #90ada2;
+}
+.favorite {
+  padding: 7px 12px;
+  font-size: 23px;
+  color: var(--gold);
+  background: #122c34cc;
+}
+.aircraft-specs {
+  padding: 28px;
+  border-left: 1px solid #ffffff0a;
+  min-width: 0;
+}
+.spec-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.spec-top > span:last-child {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.aircraft-specs h2 {
+  font-size: 37px;
+  margin: 17px 0 8px;
+}
+.aircraft-specs > p {
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 42px;
+  margin-bottom: 18px;
+}
+.power-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #071b2288;
+  padding: 13px 18px;
+  border-left: 2px solid var(--rarity);
+  margin-bottom: 22px;
+}
+.power-strip span {
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 1.4px;
+}
+.power-strip strong {
+  display: block;
+  color: #e9eee2;
+  font: 36px "Barlow Condensed";
+  margin-top: 3px;
+}
+.power-strip strong small {
+  color: var(--gold);
+  font-size: 13px;
+  margin-left: 8px;
+  letter-spacing: 0;
+}
+.specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px 22px;
+}
+.spec {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 5px;
+}
+.spec span {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.spec b {
+  font-size: 14px;
+  font-weight: 600;
+}
+.spec i {
+  height: 3px;
+  grid-column: 1/-1;
+  background: linear-gradient(
+    to right,
+    var(--rarity) var(--stat),
+    #ffffff10 var(--stat)
+  );
+}
+.armament {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  border-top: 1px solid #ffffff12;
+  padding: 17px 0;
+  margin-top: 18px;
+}
+.armament > span {
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.armament b {
+  font-size: 12px;
+  display: block;
+  color: #d4dfd3;
+  letter-spacing: 0;
+  margin-top: 5px;
+  font-weight: 500;
+}
+.spec-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.spec-actions button {
+  font-size: 10px;
+  padding: 14px;
+  flex: 1;
+  white-space: nowrap;
+}
+.detail-tools {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+.detail-tools button {
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 8px 0;
+}
+.exclusive {
+  border: 1px solid #a7bd5355;
+  background: #8cad5012;
+  padding: 10px;
+  margin: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.exclusive b {
+  font-size: 10px;
+  color: #dfd56a;
+  letter-spacing: 1px;
+}
+.exclusive span {
+  font-size: 11px;
+  color: #9fbb8e;
+}
+.catalog-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 35px 0 20px;
+}
+.catalog-title h3 {
+  font-size: 27px;
+  margin: 0;
+}
+.catalog-title span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.catalog-filters {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 0.8fr;
+  gap: 12px;
+}
+.catalog-filters label {
+  color: #8eaaa0;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+}
+.catalog-filters select,
+.catalog-filters input {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+  font:
+    12px Barlow,
+    sans-serif;
+  letter-spacing: 0;
+  padding: 12px;
+  background: #0a2029;
+  border: 1px solid #87a49633;
+  border-radius: 2px;
+  color: #d5e5dc;
+  min-width: 0;
+  height: 44px;
+}
+.catalog-filters select:focus,
+.catalog-filters input:focus {
+  outline: 1px solid #e9bd7288;
+}
+.catalog-toggles {
+  display: flex;
+  gap: 10px;
+  padding: 15px 0 22px;
+}
+.catalog-toggles button {
+  border: 0;
+  padding: 9px 16px;
+  font-size: 10px;
+  color: #8ba89d;
+  background: #ffffff03;
+  min-height: 36px;
+}
+.catalog-toggles button.active {
+  color: var(--gold);
+  background: #e9bd7212;
+}
+.plane-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+}
+.plane-card {
+  border: 1px solid #ffffff16;
+  border-top: 2px solid color-mix(in srgb, var(--rarity) 48%, transparent);
+  padding: 14px 14px 0;
+  overflow: hidden;
+  background:
+    radial-gradient(at 50% 30%, #c8e6d70b, transparent 70%), #ffffff02;
+  min-width: 0;
+  position: relative;
+}
+.plane-card:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--rarity);
+  opacity: 0.3;
+}
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-top .rarity {
+  font-size: 8px !important;
+  padding: 3px 5px;
+  letter-spacing: 1px;
+}
+.card-top > span {
+  color: var(--muted);
+  font-size: 9px;
+}
+.card-aircraft {
+  position: relative;
+  height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse, #b4d5c60c, transparent);
+}
+.card-aircraft:before {
+  content: "";
+  position: absolute;
+  bottom: 10px;
+  left: 20%;
+  width: 60%;
+  height: 25px;
+  border: 1px solid #b3cdbd13;
+  border-radius: 50%;
+}
+.plane-card img {
+  width: 100%;
+  height: 175px;
+  margin: 0;
+  transform: rotate(-6deg);
+  filter: drop-shadow(6px 8px 5px #0007);
+}
+.plane-card strong {
+  font-family: "Barlow Condensed";
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: 0.1px;
+  white-space: normal;
+  line-height: 1.1;
+  min-height: 24px;
+  margin: 8px 0;
+}
+.plane-card > small {
+  font-size: 11px;
+  letter-spacing: 0;
+  min-height: 22px;
+}
+.card-bottom {
+  border-top: 1px solid #ffffff10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 12px 0;
+  gap: 5px;
+}
+.card-bottom span {
+  font-size: 8px;
+  letter-spacing: 0.6px;
+  color: var(--gold);
+}
+.card-bottom span:last-child {
+  color: #8aaca1;
+}
+.plane-card.selected {
+  border-color: var(--rarity) !important;
+  background: radial-gradient(
+    at 50% 30%,
+    color-mix(in srgb, var(--rarity) 10%, transparent),
+    transparent 75%
+  ) !important;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--rarity) 8%, transparent);
+}
+.section-heading {
+  margin: 35px 0 18px;
+}
+.section-heading h3 {
+  margin: 9px 0;
+}
+.section-heading p {
+  font-size: 12px;
+}
+.wing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.wing-card {
+  padding: 15px;
+  background: #ffffff03;
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.wing-card > img {
+  height: 115px;
+  object-fit: contain;
+  filter: drop-shadow(6px 10px 5px #0006);
+}
+.wing-card h3 {
+  font-size: 21px;
+  margin: 10px 0;
+}
+.wing-card p {
+  font-size: 12px;
+  line-height: 1.5;
+  min-height: 36px;
+}
+.wing-card small {
+  font-size: 9px;
+  color: var(--gold);
+}
+.wing-card .outline {
+  margin-top: 18px;
+}
+.wing-card button {
+  font-size: 9px;
+  padding: 10px;
+}
+.wing-card .text-button {
+  margin-top: 3px;
+}
+.comparison {
+  padding: 25px;
+  background: #ffffff04;
+  border: 1px solid var(--line);
+  margin-top: 20px;
+}
+.comparison table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.comparison th,
+.comparison td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.comparison th {
+  color: var(--gold);
+  font-size: 12px;
+}
+.comparison p {
+  font-size: 12px;
+}
+.empty-state {
+  grid-column: 1/-1;
+  padding: 40px;
+  text-align: center;
+  background: #ffffff03;
+}
+.profile-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 25px 0;
+}
+.profile-summary > span {
+  padding: 17px;
+  background: #ffffff04;
+  border: 1px solid var(--line);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.profile-summary b {
+  display: block;
+  font: 32px "Barlow Condensed";
+  color: var(--gold);
+  margin-top: 8px;
+}
+.backup-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.file-button {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 20px !important;
+  border: 1px solid #7b9c8c !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.file-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+.file-button:focus-within {
+  outline: 2px solid var(--gold);
+}
+.settings input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+}
+.settings output {
+  font-size: 12px;
+  color: var(--gold);
+}
+.recovery-screen {
+  max-width: 640px;
+  margin: 10vh auto;
+  padding: 35px;
+  background: #122c35;
+  border: 1px solid #dfb65f77;
+}
+.recovery-screen button,
+.recovery-screen .file-button {
+  display: block !important;
+  margin: 15px 0;
+  width: 100%;
+}
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: #04151bdd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  padding: 20px;
+}
+.arsenal-modal {
+  max-width: 450px;
+}
+.arsenal-modal .eyebrow {
+  line-height: 1.5;
+}
+.weapon-preview {
+  position: relative;
+  height: 240px;
+  overflow: hidden;
+}
+.weapon-preview img {
+  height: 210px;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.weapon-preview i {
+  position: absolute;
+  top: 190px;
+  left: 45%;
+  height: 16px;
+  width: 4px;
+  background: #ffec9d;
+  box-shadow: 0 0 10px #efca69;
+  animation: preview-shot 1s linear infinite;
+}
+.weapon-preview i:nth-of-type(2) {
+  left: 55%;
+  animation-delay: 0.1s;
+}
+.weapon-preview i:nth-of-type(3) {
+  left: 50%;
+  animation-delay: 0.5s;
+}
+.result-plane {
+  height: 100px;
+  width: 120px;
+  object-fit: contain;
+}
+.result-aircraft {
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+.modal h2 {
+  font-size: 35px;
+}
+.modal .result-stars {
+  font-size: 30px;
+}
+.modal .text-button {
+  padding: 9px;
+}
+.hud-top {
+  align-items: start;
+  gap: 12px;
+}
+.health-block {
+  width: 55% !important;
+  max-width: 280px;
+}
+.hp-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hp-caption > span {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: #dbf5de;
+}
+.hp-caption strong {
+  font: 19px "Barlow Condensed";
+  line-height: 1;
+}
+.hp-track {
+  padding: 3px;
+  border: 1px solid #c6debd88;
+  background: #06121dd9;
+  margin-top: 6px;
+  box-shadow: 0 0 15px #8ef2b318;
+  height: 21px;
+  transform: skewX(-8deg);
+}
+.hp-track i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #31995f, #a4f1a4);
+  box-shadow: 0 0 10px #7bec9077;
+  transition: width 0.15s linear;
+}
+.hp-values {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 10px;
+  color: #ddf5df;
+}
+.hp-values b {
+  font-size: 8px;
+  color: #8ee7ac;
+  font-weight: 500;
+}
+.score {
+  font: 23px "Barlow Condensed";
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff1c7;
+}
+.score small {
+  font: 12px Barlow !important;
+  letter-spacing: 1px;
+  margin-top: 5px;
+}
+.pause {
+  width: 40px;
+  min-height: 40px;
+  background: #0b2334d9;
+  border-color: #f6e6b266;
+  line-height: 1;
+  font-size: 18px;
+  padding: 9px;
+  flex-shrink: 0;
+}
+#hud {
+  padding: 16px 14px;
+  background: linear-gradient(#031322ed, transparent);
+  text-shadow: 0 1px 3px #000;
+  z-index: 3;
+}
+.stage-progress {
+  margin-top: 10px;
+  height: 3px;
+  opacity: 0.7;
+}
+.shield-block {
+  font-size: 9px;
+  color: #9aeafa;
+  width: 55%;
+  margin-top: 8px;
+}
+.shield-block span {
+  display: block;
+  margin-bottom: 4px;
+}
+.shield-block progress {
+  width: 100%;
+  height: 5px;
+}
+.shield-block progress::-webkit-progress-value {
+  background: #7cdbf6;
+}
+.bossbar {
+  background: #190f1ae0;
+  border: 1px solid #f58d7066;
+  padding: 10px;
+  margin-top: 12px;
+  box-shadow: 0 8px 20px #0003;
+}
+.bossbar > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.bossbar small {
+  font: 700 13px "Barlow Condensed";
+  letter-spacing: 1px;
+  color: #ffd3bd;
+  text-align: left;
+}
+.bossbar strong {
+  font-size: 9px;
+  white-space: nowrap;
+  color: #ffd3bd;
+}
+.bossbar progress {
+  height: 12px;
+  margin-top: 6px;
+}
+.bossbar > span {
+  display: block;
+  font-size: 9px;
+  color: #eab3a1;
+  text-align: right;
+  margin-top: 4px;
+}
+.bossbar[data-phase="3"] {
+  border-color: #ff6e6e;
+  background: #39171fe3;
+}
+.bossbar[data-phase="3"] progress::-webkit-progress-value {
+  background: #ff6363;
+}
+#hud[data-health="warning"] .hp-track i {
+  background: linear-gradient(90deg, #ba8c26, #f7df78);
+}
+#hud[data-health="critical"] .hp-track i {
+  background: linear-gradient(90deg, #b5383d, #ff7771);
+}
+#hud[data-health="critical"] .hp-caption,
+#hud[data-health="critical"] .hp-values b {
+  color: #ff9f91;
+}
+#critical-alert {
+  color: #ffb6a5;
+  letter-spacing: 2px;
+  font-size: 9px;
+  text-align: center;
+  margin: 8px 0 0;
+}
+.critical:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 45px #f5383c80;
+  z-index: 2;
+  animation: critical-alert 1.5s ease-in-out infinite;
+}
+.critical .hp-track {
+  animation: critical-alert 1.5s ease-in-out infinite;
+}
+.large-hud .hp-caption > span {
+  font-size: 11px;
+}
+.large-hud .hp-caption strong {
+  font-size: 23px;
+}
+.large-hud .hp-track {
+  height: 26px;
+}
+.large-hud .hp-values {
+  font-size: 12px;
+}
+#skillbar {
+  z-index: 3;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  gap: 6px;
+}
+.skill {
+  font-size: 11px;
+  min-height: 68px;
+  padding: 9px 6px;
+  max-width: 140px;
+  min-width: 0;
+  background: #061b2fed;
+  border-color: #9ab99f88;
+  border-radius: 3px;
+}
+.skill:disabled {
+  opacity: 0.65;
+}
+.skill small {
+  font-size: 9px;
+}
+.skill b {
+  font-size: 9px;
+}
+.brazil-skill {
+  background: #254c28e8;
+  color: #ffed9a;
+  border-color: #e6d46b;
+}
+.sr-only {
+  position: absolute;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.battle-layout {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+#field {
+  height: min(100dvh, 177.7778vw);
+  max-height: 100dvh;
+  flex-shrink: 0;
+  max-width: 100%;
+  touch-action: none;
+}
+.battle-layout .right-aside > img {
+  width: 190px;
+  filter: drop-shadow(10px 15px 8px #0009);
+}
+.reduced-effects * {
+  animation: none !important;
+}
+.reduced-effects:after,
+.reduced-effects .hp-track {
+  animation: none;
+}
+.settings p {
+  font-size: 14px;
+}
+.equipment button {
+  font-size: 11px;
+  min-height: 44px;
+}
+.equipment small {
+  font-size: 9px;
+}
+.page > h2 {
+  line-height: 1.1;
+}
+.mission > small {
+  font-size: 10px;
+}
+.challenge p {
+  font-size: 14px;
+}
+@keyframes aircraft-idle {
+  50% {
+    transform: translateY(-8px) rotate(-24deg);
+  }
+}
+@keyframes hangar-entry {
+  from {
+    opacity: 0;
+    transform: translateY(20px) rotate(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-12deg);
+  }
+}
+@keyframes preview-shot {
+  to {
+    transform: translateY(-220px);
+    opacity: 0.2;
+  }
+}
+@keyframes critical-alert {
+  50% {
+    opacity: 0.6;
+  }
+}
+@media (min-width: 1500px) {
+  .showroom-plane {
+    height: 480px;
+  }
+  .hero-plane {
+    width: 470px;
+    height: 470px;
+  }
+}
+@media (max-width: 1100px) {
+  .hangar-detail {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+  .aircraft-specs {
+    padding: 22px;
+  }
+  .showroom-plane {
+    height: 350px;
+  }
+  .lobby-shortcuts button {
+    padding: 18px 12px;
+  }
+  .lobby-shortcuts small {
+    font-size: 10px;
+  }
+  .hero-plane {
+    width: 330px;
+    height: 360px;
+  }
+  .plane-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .wing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .catalog-filters {
+    grid-template-columns: 1.5fr 1.3fr 1fr 0.7fr;
+  }
+}
+@media (max-width: 760px) {
+  .page-heading h2 {
+    font-size: 34px;
+  }
+  .collection-count {
+    font-size: 38px;
+    white-space: nowrap;
+  }
+  .collection-count small {
+    font-size: 8px;
+  }
+  .hangar-detail {
+    grid-template-columns: 1fr;
+  }
+  .showroom {
+    min-height: 340px;
+  }
+  .showroom-plane {
+    height: 320px;
+    width: 85%;
+    max-width: 380px;
+  }
+  .aircraft-specs {
+    padding: 24px;
+    border-left: 0;
+    border-top: 1px solid #ffffff12;
+  }
+  .aircraft-specs h2 {
+    font-size: 36px;
+  }
+  .aircraft-specs > p {
+    min-height: 0;
+  }
+  .power-strip strong {
+    font-size: 34px;
+  }
+  .detail-tools {
+    gap: 10px;
+  }
+  .detail-tools button {
+    font-size: 10px;
+  }
+  .specs-grid {
+    gap: 18px 25px;
+  }
+  .catalog-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .plane-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .plane-card {
+    padding: 12px 10px 0;
+  }
+  .plane-card strong {
+    font-size: 22px;
+  }
+  .plane-card > small {
+    font-size: 10px;
+  }
+  .card-aircraft {
+    height: 160px;
+  }
+  .plane-card img {
+    height: 163px;
+  }
+  .card-bottom {
+    gap: 3px;
+  }
+  .card-bottom span {
+    font-size: 8px;
+  }
+  .wing-card p {
+    min-height: 54px;
+  }
+  .brazil-banner {
+    gap: 15px;
+    flex-wrap: wrap;
+    padding: 18px;
+  }
+  .brazil-banner button {
+    margin: 0;
+    width: 100%;
+  }
+  .brazil-banner p {
+    font-size: 12px;
+  }
+  .lobby-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .lobby-shortcuts button {
+    padding: 16px 12px;
+  }
+  .lobby-shortcuts small {
+    font-size: 11px;
+  }
+  .lobby-shortcuts strong {
+    font-size: 11px;
+  }
+  .profile-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .recovery-screen {
+    margin: 20px;
+    padding: 25px;
+  }
+  .page-heading {
+    align-items: start;
+  }
+  .spec-actions button {
+    min-height: 46px;
+  }
+  .spec span {
+    font-size: 10px;
+  }
+  .spec b {
+    font-size: 15px;
+  }
+  .spec .hint {
+    font-size: 10px;
+  }
+  .showroom-code {
+    font-size: 11px;
+  }
+  .catalog-title h3 {
+    font-size: 23px;
+  }
+  .catalog-title > span {
+    white-space: nowrap;
+    font-size: 10px;
+  }
+  .hero {
+    min-height: 0;
+    padding-top: 20px;
+  }
+  .hero-art {
+    position: absolute;
+    top: 30px;
+    right: -10px;
+    width: 60%;
+    height: 300px;
+  }
+  .hero-plane {
+    width: 255px;
+    height: 285px;
+  }
+  .hero .hero-copy h1 {
+    font-size: 70px;
+    position: relative;
+    z-index: 2;
+  }
+  .hero .hero-copy .lead {
+    font-size: 14px;
+    margin-top: 35px;
+  }
+  .hero .aircraft-label {
+    display: none;
+  }
+  .hero .landing-pad {
+    bottom: 40px;
+    left: 5%;
+    width: 90%;
+  }
+  .coordinate {
+    font-size: 6px;
+    right: 0;
+  }
+  .hero-actions {
+    margin-top: 20px;
+    gap: 12px;
+  }
+  .hero-actions .text-button {
+    font-size: 11px;
+  }
+  .service {
+    font-size: 8px;
+    margin-bottom: 10px;
+    gap: 5px;
+  }
+  .service span {
+    font-size: 12px;
+  }
+  .hero .eyebrow {
+    font-size: 8px;
+  }
+  .hero .art-caption {
+    display: none;
+  }
+  .hero .radar {
+    width: 260px;
+    height: 260px;
+  }
+  .hero .r2 {
+    width: 180px;
+    height: 180px;
+  }
+  .ultimate-hero .lead {
+    max-width: 205px;
+  }
+  .briefing p {
+    font-size: 11px;
+  }
+  .briefing .eyebrow {
+    font-size: 9px;
+  }
+  nav button {
+    font-size: 10px;
+    letter-spacing: 0.6px;
+  }
+  nav button small {
+    font-size: 9px;
+  }
+  .hp-caption > span {
+    font-size: 8px;
+  }
+  .hp-values {
+    font-size: 10px;
+  }
+  .hp-caption strong {
+    font-size: 18px;
+  }
+  .score {
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+  .hud-top {
+    gap: 8px;
+  }
+  .health-block {
+    width: 57% !important;
+  }
+  .bossbar small {
+    font-size: 12px;
+  }
+  .skill {
+    font-size: 10px;
+    letter-spacing: 0;
+    min-height: 64px;
+  }
+  .skill small,
+  .skill b {
+    font-size: 8px;
+  }
+  .modal .eyebrow {
+    font-size: 9px;
+  }
+  .modal h2 {
+    font-size: 32px;
+  }
+  .modal button {
+    font-size: 11px;
+  }
+  .modal {
+    max-height: 90%;
+    overflow-y: auto;
+  }
+  .result-plane {
+    height: 80px;
+  }
+  .settings label {
+    gap: 12px;
+  }
+  .settings input[type="range"] {
+    width: 42%;
+  }
+  .settings output {
+    font-size: 11px;
+  }
+  .hint {
+    font-size: 10px;
+  }
+}
+@media (max-width: 380px) {
+  main {
+    padding: 0 5%;
+  }
+  .hero .hero-copy h1 {
+    font-size: 64px;
+  }
+  .hero-plane {
+    width: 224px;
+    height: 270px;
+  }
+  .hero-art {
+    top: 45px;
+    right: -15px;
+  }
+  .hero .hero-copy .lead {
+    font-size: 13px;
+    max-width: 170px;
+  }
+  .lobby-shortcuts small {
+    font-size: 10px;
+  }
+  .plane-card strong {
+    font-size: 20px;
+  }
+  .card-aircraft {
+    height: 145px;
+  }
+  .plane-card img {
+    height: 148px;
+  }
+  .card-bottom {
+    flex-wrap: wrap;
+  }
+  .catalog-toggles {
+    gap: 5px;
+  }
+  .catalog-toggles button {
+    padding: 9px;
+    font-size: 10px;
+  }
+  .score {
+    font-size: 20px;
+  }
+  .hp-values b {
+    display: none;
+  }
+  .skill {
+    padding: 7px 4px;
+    font-size: 9px;
+  }
+  .collection-count {
+    font-size: 34px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-plane,
+  .showroom-plane,
+  .weapon-preview i,
+  .critical:after,
+  .critical .hp-track {
+    animation: none !important;
+  }
+  .hp-track i {
+    transition: none;
+  }
+}
+#loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #0c2631;
+  z-index: 10;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--gold);
+}
+#loading span {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0;
+  margin-top: 15px;
+}

@@ -1,34 +1,5 @@
-export const planes = [
-  "P-41 Sentinel",
-  "F6 Corsair",
-  "Hawk MK.II",
-  "Viper A-7",
-  "Tempest",
-  "Iron Falcon",
-  "Spectre",
-  "Thunderbolt",
-  "Crimson Ace",
-  "Valkyrie",
-  "Night Raven",
-  "Archangel",
-].map((name, i) => ({
-  id: i,
-  name,
-  tier: 1 + Math.floor(i / 3),
-  color: ["#d8e2ca", "#67b7ba", "#db985c", "#b5a5d3"][Math.floor(i / 3)],
-  hp: 100 + i * 12,
-  damage: 12 + i * 2,
-  speed: 310 + i * 8,
-  rate: 210 - i * 6,
-  price: i === 0 ? 0 : 700 + i * i * 140,
-  weapon: ["Canhões duplos", "Dispersão", "Mísseis"][i % 3],
-}));
-export const wingmen = [
-  "Wasp · interceptador",
-  "Kite · dispersão",
-  "Ghost · laser",
-  "Lynx · mísseis",
-];
+import { planes } from "./catalog";
+export { planes, wingmen } from "./catalog";
 export const devices = ["Bomba", "Escudo", "Laser", "Mísseis", "Reparação"];
 export const environments = [
   "Mar de Coral",
@@ -69,7 +40,7 @@ export const enemyTypes = [
   "Elite",
 ];
 export type Save = {
-  version: 1;
+  version: 2;
   coins: number;
   gems: number;
   selected: number;
@@ -87,9 +58,15 @@ export type Save = {
   volume: number;
   daily: string;
   claimed: string[];
+  favorites: number[];
+  reducedEffects: boolean;
+  screenShake: boolean;
+  largeHud: boolean;
+  touchOffset: number;
+  sensitivity: number;
 };
 export const fresh = (): Save => ({
-  version: 1,
+  version: 2,
   coins: 1200,
   gems: 0,
   selected: 0,
@@ -107,31 +84,148 @@ export const fresh = (): Save => ({
   volume: 0.35,
   daily: "",
   claimed: [],
+  favorites: [],
+  reducedEffects: false,
+  screenShake: true,
+  largeHud: false,
+  touchOffset: 75,
+  sensitivity: 1,
 });
+/** Strict migration: invalid data throws, so callers never overwrite an unreadable save. */
 export function load(raw: string | null): Save {
+  if (raw === null) return fresh();
+  let s: Record<string, unknown>;
   try {
-    const s = JSON.parse(raw || "null");
-    if (s?.version !== 1) return fresh();
-    const f = fresh();
-    return {
-      ...f,
-      ...s,
-      stats: { ...f.stats, ...s.stats },
-      wingLevels: { ...f.wingLevels, ...s.wingLevels },
-      selected: planes[s.selected] ? s.selected : 0,
-      coins: Math.max(0, Number(s.coins) || 0),
-    };
+    s = JSON.parse(raw);
   } catch {
-    return fresh();
+    throw new Error("O arquivo não contém JSON válido.");
   }
+  if (
+    !s ||
+    typeof s !== "object" ||
+    Array.isArray(s) ||
+    ![1, 2].includes(s.version as number)
+  )
+    throw new Error("Versão de progresso não reconhecida.");
+  const f = fresh();
+  for (const key of Object.keys(f))
+    if (s[key] === null) throw new Error("Campo nulo inválido: " + key);
+  const num = (
+    v: unknown,
+    name: string,
+    min = 0,
+    max = Number.MAX_SAFE_INTEGER,
+    integer = true,
+  ) => {
+    if (
+      typeof v !== "number" ||
+      !Number.isFinite(v) ||
+      v < min ||
+      v > max ||
+      (integer && !Number.isInteger(v))
+    )
+      throw new Error("Valor inválido: " + name);
+    return v;
+  };
+  const array = (v: unknown, name: string, max: number) => {
+    if (!Array.isArray(v) || new Set(v).size !== v.length)
+      throw new Error("Lista inválida: " + name);
+    return v.map((n) => num(n, name, 0, max));
+  };
+  const map = (
+    v: unknown,
+    name: string,
+    idMax: number,
+    valueMax = 1000000,
+    min = 0,
+  ) => {
+    if (!v || typeof v !== "object" || Array.isArray(v))
+      throw new Error("Mapa inválido: " + name);
+    const out: Record<number, number> = {};
+    for (const [k, x] of Object.entries(v)) {
+      if (!/^\d+$/.test(k)) throw new Error("Identificador inválido: " + name);
+      num(Number(k), name, 0, idMax);
+      out[Number(k)] = num(x, name, min, valueMax);
+    }
+    return out;
+  };
+  const owned = array(s.owned, "aeronaves", planes.length - 1);
+  const selected = num(s.selected, "seleção", 0, planes.length - 1);
+  if (!owned.includes(selected) || !owned.includes(0))
+    throw new Error("A aeronave selecionada não está no inventário.");
+  const levels = map(s.levels, "níveis", planes.length - 1, 100000, 1);
+  for (const id of owned) levels[id] ??= 1;
+  const wing = num(s.wing ?? 0, "companheiro", 0, 3);
+  const wingLevel = num(s.wingLevel ?? 1, "nível de companheiro", 1, 100000);
+  const wingLevels = s.wingLevels
+    ? map(s.wingLevels, "companheiros", 3, 100000, 1)
+    : { [wing]: wingLevel };
+  const dl = s.deviceLevels ?? f.deviceLevels;
+  if (!Array.isArray(dl) || dl.length !== 5)
+    throw new Error("Níveis de dispositivos inválidos.");
+  const deviceLevels = dl.map((v) => num(v, "nível de dispositivo", 1, 100000));
+  const equipped = array(s.equipped ?? f.equipped, "equipamento", 4);
+  if (equipped.length > 3) throw new Error("Máximo de três dispositivos.");
+  const stats = { ...f.stats };
+  if (s.stats !== undefined) {
+    if (!s.stats || typeof s.stats !== "object" || Array.isArray(s.stats))
+      throw new Error("Estatísticas inválidas.");
+    for (const [k, v] of Object.entries(s.stats))
+      stats[k] = num(v, "estatística", 0, Number.MAX_SAFE_INTEGER, false);
+  }
+  if (
+    !["Fácil", "Normal", "Difícil"].includes(
+      String(s.difficulty ?? f.difficulty),
+    )
+  )
+    throw new Error("Dificuldade inválida.");
+  const claimed = s.claimed ?? [];
+  if (
+    !Array.isArray(claimed) ||
+    claimed.some((v) => typeof v !== "string" || v.length > 80)
+  )
+    throw new Error("Conquistas inválidas.");
+  for (const key of ["reducedEffects", "screenShake", "largeHud"])
+    if (s[key] !== undefined && typeof s[key] !== "boolean")
+      throw new Error("Configuração inválida.");
+  if (s.daily !== undefined && typeof s.daily !== "string")
+    throw new Error("Data inválida.");
+  return {
+    ...f,
+    version: 2,
+    coins: num(s.coins, "moedas"),
+    gems: num(s.gems ?? 0, "gemas"),
+    selected,
+    owned,
+    levels,
+    stats,
+    stars: map(s.stars ?? {}, "estrelas", 29, 3),
+    unlocked: num(s.unlocked ?? 0, "missão", 0, 29),
+    wing,
+    wingLevel,
+    wingLevels: { ...f.wingLevels, ...wingLevels },
+    deviceLevels,
+    equipped,
+    difficulty: String(s.difficulty ?? f.difficulty),
+    volume: num(s.volume ?? f.volume, "volume", 0, 1, false),
+    daily: String(s.daily ?? ""),
+    claimed: [...new Set(claimed)] as string[],
+    favorites: array(s.favorites ?? [], "favoritos", planes.length - 1),
+    reducedEffects: (s.reducedEffects ?? false) as boolean,
+    screenShake: (s.screenShake ?? true) as boolean,
+    largeHud: (s.largeHud ?? false) as boolean,
+    touchOffset: num(s.touchOffset ?? 75, "deslocamento", 0, 140),
+    sensitivity: num(s.sensitivity ?? 1, "sensibilidade", 0.5, 2, false),
+  };
 }
-export const upgradeCost = (s: Save) =>
-  Math.round(180 * Math.pow(s.levels[s.selected] || 1, 1.55));
-export function upgrade(s: Save) {
-  const cost = upgradeCost(s);
+export const upgradeCost = (s: Save, id = s.selected) =>
+  Math.round(180 * Math.pow(s.levels[id] || 1, 1.55));
+export function upgrade(s: Save, id = s.selected) {
+  if (!s.owned.includes(id)) return false;
+  const cost = upgradeCost(s, id);
   if (s.coins < cost) return false;
   s.coins -= cost;
-  s.levels[s.selected] = (s.levels[s.selected] || 1) + 1;
+  s.levels[id] = (s.levels[id] || 1) + 1;
   s.stats.upgrades++;
   return true;
 }

@@ -1,5 +1,12 @@
 import Phaser from "phaser";
-import { aircraft, svgUrl, warship, fortress, ground } from "./art";
+import {
+  aircraft,
+  svgUrl,
+  warship,
+  fortress,
+  ground,
+  companionArt,
+} from "./art";
 import { planes, stages, type Save } from "./data";
 import { audio } from "./audio";
 type Bullet = {
@@ -9,6 +16,7 @@ type Bullet = {
   damage: number;
   enemy: boolean;
   homing: boolean;
+  hits?: Enemy[];
 };
 type Enemy = {
   s: Phaser.GameObjects.Image;
@@ -35,6 +43,7 @@ export class Battle extends Phaser.Scene {
   done!: (r: BattleResult) => void;
   player!: Phaser.GameObjects.Image;
   wing: Phaser.GameObjects.Image[] = [];
+  shadow!: Phaser.GameObjects.Image;
   bullets: Bullet[] = [];
   enemies: Enemy[] = [];
   pool: Phaser.GameObjects.Image[] = [];
@@ -62,6 +71,11 @@ export class Battle extends Phaser.Scene {
   level = 1;
   difficulty = 1;
   laser = 0;
+  secondaryShot = 3;
+  specialCooldown = 0;
+  specialRemaining = 0;
+  specialShot = 0;
+  lastAlert = -5;
   constructor() {
     super("battle");
   }
@@ -77,9 +91,15 @@ export class Battle extends Phaser.Scene {
     this.hud = d.hud;
   }
   preload() {
-    planes.forEach((p) =>
-      this.load.svg("plane" + p.id, svgUrl(aircraft(p.color, p.id))),
-    );
+    const p = planes[this.save.selected];
+    this.load.svg("plane" + p.id, svgUrl(aircraft(p.color, p.id)), {
+      width: 160,
+      height: 160,
+    });
+    this.load.svg("wing", svgUrl(companionArt(this.save.wing)), {
+      width: 80,
+      height: 84,
+    });
     this.load.svg("enemy", svgUrl(aircraft("#d78a73", 2)));
     this.load.svg("ship", svgUrl(warship()));
     this.load.svg("fortress", svgUrl(fortress()));
@@ -111,6 +131,17 @@ export class Battle extends Phaser.Scene {
     bctx.fillStyle = "#ffffe9";
     bctx.fillRect(8, 9, 4, 22);
     this.textures.addCanvas("glowBullet", bc);
+    const rocket = this.make.graphics({ x: 0, y: 0 });
+    rocket.fillStyle(0x203c4d);
+    rocket.fillTriangle(2, 27, 8, 14, 14, 27);
+    rocket.fillStyle(0xd3e3d1);
+    rocket.fillRoundedRect(5, 4, 6, 23, 3);
+    rocket.fillStyle(0xf5c96a);
+    rocket.fillTriangle(5, 5, 8, 0, 11, 5);
+    rocket.fillStyle(0xffa84e);
+    rocket.fillTriangle(5, 28, 8, 35, 11, 28);
+    rocket.generateTexture("missile", 16, 36);
+    rocket.destroy();
     this.makeTerrain();
     this.bg = this.add.tileSprite(270, 480, 540, 960, "terrain");
     this.clouds = this.add
@@ -139,13 +170,19 @@ export class Battle extends Phaser.Scene {
           : 1;
     this.player = this.add
       .image(270, 790, "plane" + this.save.selected)
-      .setDisplaySize(76, 84)
+      .setDisplaySize(94, 94)
       .setDepth(5);
+    this.shadow = this.add
+      .image(280, 805, "plane" + this.save.selected)
+      .setDisplaySize(94, 94)
+      .setDepth(2.5)
+      .setTint(0x03151f)
+      .setAlpha(0.3);
     for (const x of [-1, 1])
       this.wing.push(
         this.add
-          .image(270 + x * 63, 830, "plane" + ((this.save.wing + 1) % 12))
-          .setDisplaySize(38, 44)
+          .image(270 + x * 63, 830, "wing")
+          .setDisplaySize(45, 47)
           .setDepth(4),
       );
     this.keys = this.input.keyboard!.addKeys(
@@ -153,17 +190,21 @@ export class Battle extends Phaser.Scene {
     ) as typeof this.keys;
     this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
       if (!p.wasTouch || p.isDown)
-        this.target = new Phaser.Math.Vector2(p.x, p.y - (p.wasTouch ? 75 : 0));
+        this.target = new Phaser.Math.Vector2(
+          p.x,
+          p.y - (p.wasTouch ? this.save.touchOffset : 0),
+        );
     });
     this.input.on(
       "pointerdown",
       (p: Phaser.Input.Pointer) =>
         (this.target = new Phaser.Math.Vector2(
           p.x,
-          p.y - (p.wasTouch ? 75 : 0),
+          p.y - (p.wasTouch ? this.save.touchOffset : 0),
         )),
     );
     this.input.keyboard!.on("keydown-ESC", () => this.togglePause());
+    this.input.keyboard!.on("keydown-SPACE", () => this.special());
     ["ONE", "TWO", "THREE", "FOUR", "FIVE"].forEach((k, i) =>
       this.input.keyboard!.on("keydown-" + k, () => this.ability(i)),
     );
@@ -175,6 +216,7 @@ export class Battle extends Phaser.Scene {
       this.pool = [];
     });
     audio.mode = "battle";
+    audio.paused = false;
   }
   onBlur() {
     if (!this.ended && !this.paused) this.togglePause();
@@ -182,6 +224,10 @@ export class Battle extends Phaser.Scene {
   togglePause() {
     if (this.ended) return;
     this.paused = !this.paused;
+    this.time.paused = this.paused;
+    if (this.paused) this.tweens.pauseAll();
+    else this.tweens.resumeAll();
+    audio.paused = this.paused;
     this.hud(this);
   }
   makeTerrain() {
@@ -341,6 +387,8 @@ export class Battle extends Phaser.Scene {
     enemy = false,
     damage = 10,
     homing = false,
+    color?: number,
+    piercing = false,
   ) {
     if (this.bullets.length > 650) return;
     const s = this.pool.pop() || this.add.image(0, 0, "glowBullet");
@@ -348,10 +396,20 @@ export class Battle extends Phaser.Scene {
       .setActive(true)
       .setVisible(true)
       .setDepth(enemy ? 6 : 4)
-      .setTint(enemy ? 0xff755f : homing ? 0x79eaff : 0xffefa9)
+      .setTint(color ?? (enemy ? 0xff755f : homing ? 0x79eaff : 0xffefa9))
       .setScale(enemy ? 0.85 : 0.8, enemy ? 0.43 : 0.85)
       .setRotation(Math.atan2(vx, -vy));
-    this.bullets.push({ s, vx, vy, enemy, damage, homing });
+    s.setTexture(homing ? "missile" : "glowBullet");
+    if (piercing) s.setScale(0.65, 2);
+    this.bullets.push({
+      s,
+      vx,
+      vy,
+      enemy,
+      damage,
+      homing,
+      hits: piercing ? [] : undefined,
+    });
   }
   recycle(i: number) {
     const [b] = this.bullets.splice(i, 1);
@@ -359,7 +417,11 @@ export class Battle extends Phaser.Scene {
     this.pool.push(b.s);
   }
   explosion(x: number, y: number, big = false) {
-    this.fx.explode(big ? 85 : 28, x, y);
+    this.fx.explode(
+      this.save.reducedEffects ? (big ? 18 : 6) : big ? 85 : 28,
+      x,
+      y,
+    );
     for (let k = 0; k < (big ? 6 : 2); k++) {
       const core = this.add
         .circle(
@@ -389,7 +451,7 @@ export class Battle extends Phaser.Scene {
       onComplete: () => ring.destroy(),
     });
     audio.tone(big ? 70 : 130, big ? 0.5 : 0.15, "sawtooth", 0.3);
-    if (big) this.cameras.main.shake(240, 0.008);
+    if (big && this.save.screenShake) this.cameras.main.shake(240, 0.008);
   }
   spawnEnemy(kind: number, x: number, boss = false) {
     const mult = stages[this.stage].difficulty * this.difficulty;
@@ -439,7 +501,8 @@ export class Battle extends Phaser.Scene {
         if (this.bullets[j].enemy) this.recycle(j);
       for (const e of this.enemies) e.hp -= 350 + lv * 90;
       this.explosion(this.player.x, 430, true);
-      this.cameras.main.flash(220, 200, 230, 255);
+      if (!this.save.reducedEffects)
+        this.cameras.main.flash(220, 200, 230, 255);
     }
     if (i === 1) this.shield = 5 + lv;
     if (i === 2) this.laser = 3 + lv * 0.4;
@@ -458,10 +521,60 @@ export class Battle extends Phaser.Scene {
       this.hp = Math.min(this.maxHp, this.hp + this.maxHp * (0.25 + lv * 0.04));
     audio.tone(600, 0.3, "triangle");
   }
+  special() {
+    if (
+      this.save.selected !== 12 ||
+      this.ended ||
+      this.paused ||
+      this.specialCooldown > 0
+    )
+      return;
+    this.specialCooldown = 16;
+    this.specialRemaining = 2;
+    this.specialShot = this.elapsed;
+    audio.tone(440, 0.3, "triangle", 0.2);
+    audio.tone(660, 0.35, "sine", 0.1);
+    if (!this.save.reducedEffects) this.cameras.main.flash(120, 25, 80, 35);
+  }
   update(_t: number, ms: number) {
     if (this.ended || this.paused) return;
     const dt = Math.min(ms / 1000, 0.04);
     this.elapsed += dt;
+    this.specialCooldown = Math.max(0, this.specialCooldown - dt);
+    if (this.hp / this.maxHp < 0.25 && this.elapsed - this.lastAlert > 3) {
+      audio.tone(260, 0.18, "triangle", 0.18);
+      this.lastAlert = this.elapsed;
+    }
+    if (this.specialRemaining > 0) {
+      this.specialRemaining = Math.max(0, this.specialRemaining - dt);
+      if (this.elapsed > this.specialShot) {
+        this.specialShot = this.elapsed + 0.065;
+        for (let j = -2; j <= 2; j++)
+          this.bullet(
+            this.player.x + j * 8,
+            this.player.y - 38,
+            j * 75,
+            -800,
+            false,
+            12 * (1 + (this.level - 1) * 0.16),
+            false,
+            j % 2 ? 0x6fff77 : 0xffe46a,
+          );
+      }
+      if (this.specialRemaining === 0)
+        for (const x of [-22, 22])
+          this.bullet(
+            this.player.x + x,
+            this.player.y - 20,
+            x * 3,
+            -460,
+            false,
+            120 * (1 + (this.level - 1) * 0.16),
+            true,
+            0xb6ff8a,
+          );
+    }
+
     this.bg.tilePositionY -= dt * 65;
     this.clouds.tilePositionY -= dt * 110;
     this.cooldowns = this.cooldowns.map((c) => Math.max(0, c - dt));
@@ -483,12 +596,21 @@ export class Battle extends Phaser.Scene {
       this.player.y += (dy / len) * planes[this.save.selected].speed * dt;
     } else if (this.target) {
       dx = this.target.x - this.player.x;
-      this.player.x += dx * Math.min(1, dt * 12);
-      this.player.y += (this.target.y - this.player.y) * Math.min(1, dt * 12);
+      this.player.x += dx * Math.min(1, dt * 12 * this.save.sensitivity);
+      this.player.y +=
+        (this.target.y - this.player.y) *
+        Math.min(1, dt * 12 * this.save.sensitivity);
     }
-    this.player.x = Phaser.Math.Clamp(this.player.x, 30, 510);
+    this.player.x = Phaser.Math.Clamp(this.player.x, 45, 495);
     this.player.y = Phaser.Math.Clamp(this.player.y, 100, 890);
-    this.player.setAngle(Phaser.Math.Clamp(dx * 0.08, -14, 14));
+    const bank = this.target ? Phaser.Math.Clamp(dx * 0.08, -14, 14) : dx * 12;
+    this.player.setAngle(
+      Phaser.Math.Linear(this.player.angle, bank, Math.min(1, dt * 10)),
+    );
+    this.shadow
+      .setPosition(this.player.x + 10, this.player.y + 18)
+      .setAngle(this.player.angle)
+      .setVisible(this.hp > 0);
     let prop = this.children.getByName("prop") as Phaser.GameObjects.Ellipse;
     if (!prop)
       prop = this.add
@@ -497,9 +619,10 @@ export class Battle extends Phaser.Scene {
         .setDepth(6);
     prop
       .setPosition(this.player.x, this.player.y - 37)
+      .setAngle(this.player.angle)
       .setScale(0.6 + Math.abs(Math.sin(this.elapsed * 85)) * 0.4, 1)
-      .setVisible(this.hp > 0);
-    if (Math.random() < 0.45)
+      .setVisible(this.hp > 0 && planes[this.save.selected].propeller);
+    if (Math.random() < (this.save.reducedEffects ? 0.05 : 0.25))
       this.fx.emitParticleAt(this.player.x, this.player.y + 37, 1);
     this.wing.forEach((w, i) => {
       w.x = Phaser.Math.Linear(w.x, this.player.x + (i ? 65 : -65), dt * 10);
@@ -517,17 +640,32 @@ export class Battle extends Phaser.Scene {
       const dmg =
         planes[this.save.selected].damage * (1 + (this.level - 1) * 0.16);
       for (const x of [-13, 13])
-        this.bullet(this.player.x + x, this.player.y - 35, 0, -720, false, dmg);
+        this.bullet(
+          this.player.x + x,
+          this.player.y - 35,
+          0,
+          -720,
+          false,
+          dmg,
+          false,
+          this.save.selected === 12 ? 0xa4ff6c : undefined,
+        );
       if (this.save.selected % 3 === 1 || this.level >= 4)
-        for (const x of [-1, 1])
-          this.bullet(
-            this.player.x,
-            this.player.y - 25,
-            x * 160,
-            -640,
-            false,
-            dmg * 0.65,
-          );
+        this.shadow = this.add
+          .image(280, 805, "plane" + this.save.selected)
+          .setDisplaySize(94, 94)
+          .setDepth(2.5)
+          .setTint(0x03151f)
+          .setAlpha(0.3);
+      for (const x of [-1, 1])
+        this.bullet(
+          this.player.x,
+          this.player.y - 25,
+          x * 160,
+          -640,
+          false,
+          dmg * 0.65,
+        );
       if (this.save.selected % 3 === 2 && Math.random() < 0.25)
         this.bullet(
           this.player.x,
@@ -538,18 +676,37 @@ export class Battle extends Phaser.Scene {
           dmg * 2,
           true,
         );
-      this.wing.forEach((w) =>
-        this.bullet(
-          w.x,
-          w.y - 20,
-          this.save.wing === 1 ? (w.x - this.player.x) * 1.5 : 0,
-          -640,
-          false,
-          5 + (this.save.wingLevels[this.save.wing] || 1) * 3,
-          this.save.wing === 3,
-        ),
-      );
+      this.wing.forEach((w) => {
+        const damage = 5 + (this.save.wingLevels[this.save.wing] || 1) * 3;
+        for (const vx of this.save.wing === 1 ? [-140, 0, 140] : [0])
+          this.bullet(
+            w.x,
+            w.y - 20,
+            vx,
+            this.save.wing === 2 ? -950 : -640,
+            false,
+            damage,
+            this.save.wing === 3,
+            this.save.wing === 2 ? 0xbfa1ff : undefined,
+            this.save.wing === 2,
+          );
+      });
       audio.tone(850, 0.035, "square", 0.025);
+    }
+    if (this.elapsed > this.secondaryShot && this.save.selected !== 12) {
+      this.secondaryShot = this.elapsed + 4.8;
+      const p = planes[this.save.selected];
+      for (const x of [-25, 25])
+        this.bullet(
+          this.player.x + x,
+          this.player.y - 15,
+          x,
+          -480,
+          false,
+          p.damage * (1 + (this.level - 1) * 0.16) * 2.2,
+          p.id % 3 === 2,
+          0xc1e9df,
+        );
     }
     const stage = stages[this.stage];
     if (this.elapsed < this.spawn) {
@@ -703,6 +860,7 @@ export class Battle extends Phaser.Scene {
       } else {
         const e = this.enemies.find(
           (e) =>
+            !b.hits?.includes(e) &&
             Math.abs(b.s.x - e.s.x) <
               (e.boss ? e.s.displayWidth * 0.43 : 25 + e.kind) &&
             Math.abs(b.s.y - e.s.y) <
@@ -713,7 +871,10 @@ export class Battle extends Phaser.Scene {
           e.s.setAlpha(0.55);
           this.tweens.add({ targets: e.s, alpha: 1, duration: 80 });
           this.fx.explode(2, b.s.x, b.s.y);
-          this.recycle(i);
+          if (b.hits) {
+            b.hits.push(e);
+            if (b.hits.length >= 3) this.recycle(i);
+          } else this.recycle(i);
         }
       }
     }
@@ -745,7 +906,7 @@ export class Battle extends Phaser.Scene {
     if (this.inv > 0 || this.shield > 0) return;
     this.hp = Math.max(0, this.hp - d);
     this.inv = 1.1;
-    this.cameras.main.shake(100, 0.004);
+    if (this.save.screenShake) this.cameras.main.shake(100, 0.004);
     audio.tone(90, 0.2, "sawtooth");
     if (this.hp <= 0) {
       this.explosion(this.player.x, this.player.y, true);
