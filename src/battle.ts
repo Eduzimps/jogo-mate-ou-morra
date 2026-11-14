@@ -9,6 +9,7 @@ import {
 } from "./art";
 import { planes, stages, type Save } from "./data";
 import { audio } from "./audio";
+import { RioWorld } from "./world/RioWorld";
 type Bullet = {
   s: Phaser.GameObjects.Image;
   vx: number;
@@ -50,6 +51,8 @@ export class Battle extends Phaser.Scene {
   fx!: Phaser.GameObjects.Particles.ParticleEmitter;
   bg!: Phaser.GameObjects.TileSprite;
   clouds!: Phaser.GameObjects.TileSprite;
+  rioWorld?: RioWorld;
+  private rioSection = "";
   hud!: (v: Battle) => void;
   keys!: Record<string, Phaser.Input.Keyboard.Key>;
   elapsed = 0;
@@ -91,6 +94,7 @@ export class Battle extends Phaser.Scene {
     this.hud = d.hud;
   }
   preload() {
+    if (this.stage === 0) RioWorld.preload(this);
     const p = planes[this.save.selected];
     this.load.svg("plane" + p.id, svgUrl(aircraft(p.color, p.id)), {
       width: 160,
@@ -108,6 +112,11 @@ export class Battle extends Phaser.Scene {
     this.load.svg("turret", svgUrl(ground(6)));
   }
   create() {
+    if (this.stage === 0 && !RioWorld.hasAssets(this)) {
+      this.ended = true;
+      this.game.events.emit("world-load-error");
+      return;
+    }
     const g = this.make.graphics({ x: 0, y: 0 });
     g.fillStyle(0xffffff);
     g.fillCircle(4, 4, 4);
@@ -142,12 +151,16 @@ export class Battle extends Phaser.Scene {
     rocket.fillTriangle(5, 28, 8, 35, 11, 28);
     rocket.generateTexture("missile", 16, 36);
     rocket.destroy();
-    this.makeTerrain();
-    this.bg = this.add.tileSprite(270, 480, 540, 960, "terrain");
-    this.clouds = this.add
-      .tileSprite(270, 480, 540, 960, "cloud")
-      .setAlpha(0.24)
-      .setDepth(2);
+    if (this.stage === 0)
+      this.rioWorld = new RioWorld(this, this.save.reducedEffects);
+    else {
+      this.makeTerrain();
+      this.bg = this.add.tileSprite(270, 480, 540, 960, "terrain");
+      this.clouds = this.add
+        .tileSprite(270, 480, 540, 960, "cloud")
+        .setAlpha(0.24)
+        .setDepth(2);
+    }
     this.fx = this.add
       .particles(0, 0, "spark", {
         emitting: false,
@@ -214,6 +227,7 @@ export class Battle extends Phaser.Scene {
       this.bullets = [];
       this.enemies = [];
       this.pool = [];
+      this.rioWorld?.destroy();
     });
     audio.mode = "battle";
     audio.paused = false;
@@ -575,8 +589,23 @@ export class Battle extends Phaser.Scene {
           );
     }
 
-    this.bg.tilePositionY -= dt * 65;
-    this.clouds.tilePositionY -= dt * 110;
+    if (this.rioWorld) {
+      this.rioWorld.update(this.elapsed, stages[this.stage].duration, dt);
+      const section = this.rioWorld.state.section;
+      if (section !== this.rioSection) {
+        this.rioSection = section;
+        if (section === "christ") {
+          audio.mode = "landmark";
+          // A quiet, readable scenic passage: no new waves, existing aircraft
+          // remain targets but hostile rounds are cleared once on entry.
+          for (let i = this.bullets.length - 1; i >= 0; i--)
+            if (this.bullets[i].enemy) this.recycle(i);
+        } else if (!this.bossSpawned) audio.mode = "battle";
+      }
+    } else {
+      this.bg.tilePositionY -= dt * 65;
+      this.clouds.tilePositionY -= dt * 110;
+    }
     this.cooldowns = this.cooldowns.map((c) => Math.max(0, c - dt));
     this.shield = Math.max(0, this.shield - dt);
     this.inv = Math.max(0, this.inv - dt);
@@ -651,21 +680,15 @@ export class Battle extends Phaser.Scene {
           this.save.selected === 12 ? 0xa4ff6c : undefined,
         );
       if (this.save.selected % 3 === 1 || this.level >= 4)
-        this.shadow = this.add
-          .image(280, 805, "plane" + this.save.selected)
-          .setDisplaySize(94, 94)
-          .setDepth(2.5)
-          .setTint(0x03151f)
-          .setAlpha(0.3);
-      for (const x of [-1, 1])
-        this.bullet(
-          this.player.x,
-          this.player.y - 25,
-          x * 160,
-          -640,
-          false,
-          dmg * 0.65,
-        );
+        for (const x of [-1, 1])
+          this.bullet(
+            this.player.x,
+            this.player.y - 25,
+            x * 160,
+            -640,
+            false,
+            dmg * 0.65,
+          );
       if (this.save.selected % 3 === 2 && Math.random() < 0.25)
         this.bullet(
           this.player.x,
@@ -711,23 +734,29 @@ export class Battle extends Phaser.Scene {
     const stage = stages[this.stage];
     if (this.elapsed < this.spawn) {
     } else if (this.elapsed < stage.duration) {
-      this.spawn = this.elapsed + Math.max(1.4, 2.8 - this.stage * 0.04);
-      const wave = Math.floor(this.elapsed / 3) % 5;
-      for (let j = 0; j < 4 + (this.stage > 8 ? 1 : 0); j++) {
-        const kind = (Math.floor(this.elapsed / 4) + j + this.stage) % 12;
-        const x =
-          wave === 0
-            ? 65 + j * 130
-            : wave === 1
-              ? 120 + j * 100
-              : wave === 2
-                ? 60 + j * 75
-                : wave === 3
-                  ? 480 - j * 70
-                  : 60 + j * 125;
-        this.spawnEnemy(kind, x);
+      if (this.rioWorld?.state.section !== "christ") {
+        this.spawn = this.elapsed + Math.max(1.4, 2.8 - this.stage * 0.04);
+        const wave = Math.floor(this.elapsed / 3) % 5;
+        for (let j = 0; j < 4 + (this.stage > 8 ? 1 : 0); j++) {
+          const kind = (Math.floor(this.elapsed / 4) + j + this.stage) % 12;
+          const x =
+            wave === 0
+              ? 65 + j * 130
+              : wave === 1
+                ? 120 + j * 100
+                : wave === 2
+                  ? 60 + j * 75
+                  : wave === 3
+                    ? 480 - j * 70
+                    : 60 + j * 125;
+          this.spawnEnemy(kind, x);
+        }
       }
-    } else if (!this.bossSpawned) {
+    } else if (
+      !this.bossSpawned &&
+      (!this.rioWorld ||
+        (this.rioWorld.state.bossReady && this.rioWorld.flyoverComplete))
+    ) {
       this.bossSpawned = true;
       audio.mode = "boss";
       this.spawnEnemy(9 + stage.boss, 270, true);

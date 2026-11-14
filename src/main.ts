@@ -9,7 +9,7 @@ import { aircraft, svgUrl } from "./art";
 import {
   planes,
   stages,
-  environments,
+  stageRegion,
   devices,
   wingmen,
   fresh,
@@ -91,7 +91,7 @@ function home() {
      ),
    )
    .join("")}</section>
- <section class="briefing"><div><div class="eyebrow">SUA PRÓXIMA OPERAÇÃO</div><h2>${stages[save.unlocked].name}</h2><p>${environments[stages[save.unlocked].environment]} <span>/</span> MISSÃO ${String(save.unlocked + 1).padStart(2, "0")}</p></div><div class="brief-reward"><small>RECOMPENSA BASE</small><strong>◈ ${stages[save.unlocked].reward}</strong></div>${button("VER OPERAÇÃO →", "campaign", "outline")}</section>
+ <section class="briefing"><div><div class="eyebrow">SUA PRÓXIMA OPERAÇÃO</div><h2>${stages[save.unlocked].name}</h2><p>${stageRegion(save.unlocked)} <span>/</span> MISSÃO ${String(save.unlocked + 1).padStart(2, "0")}</p></div><div class="brief-reward"><small>RECOMPENSA BASE</small><strong>◈ ${stages[save.unlocked].reward}</strong></div>${button("VER OPERAÇÃO →", "campaign", "outline")}</section>
  <section class="brazil-banner"><div class="brazil-mark">BR<span>29</span></div><div><div class="eyebrow">NOVO / COLEÇÃO BRASILEIRA</div><h3>Falcão do Brasil</h3><p>Um novo voo. A mesma coragem. Conheça a Tempestade Verde.</p></div>${button("CONHECER AERONAVE →", "discover:12", "outline")}</section>`);
 }
 function hangar() {
@@ -116,7 +116,7 @@ function hangar() {
 }
 function campaign() {
   shell(
-    `<section class="page"><div class="eyebrow">TEATRO DE OPERAÇÕES</div><h2>Conquiste os céus.</h2><p>30 missões · 6 regiões · 3 classes de chefes. Vença para avançar.</p><div class="mission-grid">${stages.map((s) => `<button data-action="start:${s.id}" class="mission ${s.id > save.unlocked ? "locked" : ""}" ${s.id > save.unlocked ? "disabled" : ""}><small>${environments[s.environment]}</small><strong>${String(s.id + 1).padStart(2, "0")}</strong><h3>${s.name}</h3><span>${"★".repeat(save.stars[s.id] || 0)}${"☆".repeat(3 - (save.stars[s.id] || 0))}</span><small>${s.id > save.unlocked ? "BLOQUEADA" : "DECOLAR →"} · ◈ ${s.reward}</small></button>`).join("")}</div></section>`,
+    `<section class="page"><div class="eyebrow">TEATRO DE OPERAÇÕES</div><h2>Conquiste os céus.</h2><p>30 missões · Rio de Janeiro + 6 regiões · 3 classes de chefes. Vença para avançar.</p><div class="mission-grid">${stages.map((s) => `<button data-action="start:${s.id}" class="mission ${s.id > save.unlocked ? "locked" : ""}" ${s.id > save.unlocked ? "disabled" : ""}><small>${stageRegion(s.id)}</small><strong>${String(s.id + 1).padStart(2, "0")}</strong><h3>${s.name}</h3><span>${"★".repeat(save.stars[s.id] || 0)}${"☆".repeat(3 - (save.stars[s.id] || 0))}</span><small>${s.id > save.unlocked ? "BLOQUEADA" : "DECOLAR →"} · ◈ ${s.reward}</small></button>`).join("")}</div></section>`,
   );
 }
 const challenges = [
@@ -193,7 +193,7 @@ function start(id: number) {
   lastHud = 0;
   result = undefined;
   game?.destroy(true);
-  root.innerHTML = `<div class="battle-layout"><aside><div class="eyebrow">AO VIVO / OPERAÇÃO ${id + 1}</div><h1>SKY<br>STRIKE<span>1945</span></h1><h3>${stages[id].name}</h3><p>${environments[stages[id].environment]}</p><div class="battle-instructions">MOVA · WASD / SETAS / MOUSE<br>HABILIDADES · 1—5<br>PAUSA · ESC</div>${button("ABORTAR MISSÃO", "abort", "outline")}</aside><div id="field" class="${save.largeHud ? "large-hud" : ""} ${save.reducedEffects ? "reduced-effects" : ""}"><div id="canvas"></div><div id="loading" role="status">PREPARANDO AERONAVE<span>Inicializando os sistemas de combate…</span></div><div id="hud"></div><div id="skillbar"></div><div id="overlay"></div></div><aside class="right-aside"><small>SEU ESQUADRÃO</small>${img(save.selected)}<h3>${planes[save.selected].name}</h3><p>Poder ${power(save)}<br>${save.difficulty}</p><div class="eyebrow">OBJETIVOS</div><p>Elimine as formações.<br>Sobreviva ao ataque.<br>Destrua o chefe.</p></aside></div>`;
+  root.innerHTML = `<div class="battle-layout"><aside><div class="eyebrow">AO VIVO / OPERAÇÃO ${id + 1}</div><h1>SKY<br>STRIKE<span>1945</span></h1><h3>${stages[id].name}</h3><p>${stageRegion(id)}</p><div class="battle-instructions">MOVA · WASD / SETAS / MOUSE<br>HABILIDADES · 1—5<br>PAUSA · ESC</div>${button("ABORTAR MISSÃO", "abort", "outline")}</aside><div id="field" class="${save.largeHud ? "large-hud" : ""} ${save.reducedEffects ? "reduced-effects" : ""}"><div id="canvas"></div><div id="loading" role="status">PREPARANDO AERONAVE<span>Inicializando os sistemas de combate…</span></div><div id="hud"></div><div id="skillbar"></div><div id="route-caption" aria-live="polite"></div><div id="overlay"></div></div><aside class="right-aside"><small>SEU ESQUADRÃO</small>${img(save.selected)}<h3>${planes[save.selected].name}</h3><p>Poder ${power(save)}<br>${save.difficulty}</p><div class="eyebrow">OBJETIVOS</div><p>${id === 0 ? "Atravesse a costa.<br>Sobrevoe o Corcovado.<br>Defenda a Guanabara." : "Elimine as formações.<br>Sobreviva ao ataque.<br>Destrua o chefe."}</p></aside></div>`;
   const scene = new Battle();
   game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -205,6 +205,11 @@ function start(id: number) {
     scene: [],
     render: { antialias: true },
     audio: { noAudio: true },
+  });
+  game.events.once("world-load-error", () => {
+    const loading = document.getElementById("loading");
+    if (loading)
+      loading.innerHTML = `CENÁRIO NÃO CARREGADO<span>Verifique a conexão e tente novamente. Seu progresso foi preservado.</span>${button("TENTAR CARREGAR NOVAMENTE", "retry", "primary")}${button("VOLTAR À BASE", "abort", "outline")}`;
   });
   game.scene.add("battle", scene, true, {
     save,
@@ -221,6 +226,16 @@ function updateHud(b: Battle) {
   if (now - lastHud < 80 && b.paused === lastPaused) return;
   lastHud = now;
   lastPaused = b.paused;
+  const caption = document.getElementById("route-caption");
+  if (caption && b.rioWorld) {
+    const state = b.rioWorld.state;
+    if (caption.dataset.section !== state.section) {
+      caption.dataset.section = state.section;
+      caption.innerHTML = `<small>OPERAÇÃO GUANABARA / BRASIL</small><strong>${state.label}</strong>${state.section === "christ" ? "<span>CORCOVADO / SOBREVOO DO MARCO</span>" : ""}`;
+    }
+    caption.classList.toggle("landmark-caption", state.section === "christ");
+    caption.hidden = b.paused || b.ended;
+  }
   const hud = document.querySelector("#hud");
   if (!hud) return;
   document.getElementById("loading")?.remove();

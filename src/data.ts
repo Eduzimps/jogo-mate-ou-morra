@@ -11,20 +11,25 @@ export const environments = [
 ];
 export const stages = Array.from({ length: 30 }, (_, i) => ({
   id: i,
-  name: [
-    "Operação Aurora",
-    "Arquipélago Hostil",
-    "Asas de Aço",
-    "Linha de Fogo",
-    "Comboio Fantasma",
-    "Céu Partido",
-  ][i % 6],
+  name:
+    i === 0
+      ? "Operação Guanabara"
+      : [
+          "Operação Aurora",
+          "Arquipélago Hostil",
+          "Asas de Aço",
+          "Linha de Fogo",
+          "Comboio Fantasma",
+          "Céu Partido",
+        ][i % 6],
   environment: i % 6,
   duration: 48 + Math.min(i, 12) * 2,
   reward: 350 + i * 90,
   boss: i % 3,
   difficulty: 1 + i * 0.12,
 }));
+export const stageRegion = (id: number) =>
+  id === 0 ? "Rio de Janeiro · Brasil" : environments[stages[id].environment];
 export const enemyTypes = [
   "Scout",
   "Dart",

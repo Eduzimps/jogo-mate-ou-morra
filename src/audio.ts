@@ -12,11 +12,13 @@ export class AudioEngine {
       this.timer = window.setInterval(() => {
         if (document.hidden) return;
         const seq =
-          this.mode === "boss"
-            ? [55, 65.4, 73.4, 61.7]
-            : this.mode === "battle"
-              ? [110, 130.8, 164.8, 146.8]
-              : [130.8, 164.8, 196, 164.8];
+          this.mode === "landmark"
+            ? [196, 246.94, 293.66, 392]
+            : this.mode === "boss"
+              ? [55, 65.4, 73.4, 61.7]
+              : this.mode === "battle"
+                ? [110, 130.8, 164.8, 146.8]
+                : [130.8, 164.8, 196, 164.8];
         this.tone(
           seq[this.step++ % 4],
           0.22,

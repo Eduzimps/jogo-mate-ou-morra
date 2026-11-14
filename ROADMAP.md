@@ -1,4 +1,24 @@
-# Ultimate — continuidade técnica
+# Ultimate Brazil 2.5D — entregas em etapas
+
+## Etapa atual concluída: 1 — missão do Rio
+
+Operação Guanabara (ID 0): arte original de costa/cidade/relevo, água animada, nuvens e sombras, cinco trechos sem repetição, desaceleração no Corcovado, sobrevoo do Cristo e chefe depois do marco. Saves e as outras 29 missões preservados. Registros e comandos de validação estão no README e nos testes `rio-route`/`rio-browser`.
+
+A referência visual é Rio em perspectiva aérea 2.5D. O mapa é uma interpretação artística; não usamos as fotografias anexadas como assets. A arte otimizada está versionada com o código.
+
+## Próximas entregas do pedido Brazil 2.5D
+
+2. **Aeronaves, combate e HUD:** partir dos 13 aviões e quatro companheiros já redesenhados; revisar inimigos/bombardeiros, fumaça e impacto sem reduzir a leitura dos projéteis. Manter testes de textura, alocação e HUD.
+3. **BR-29, lobby e hangar:** BR-29 e Tempestade Verde já funcionam; preservar IDs e upgrades. Acrescentar ambientação brasileira ao hangar e lobby sem substituir os filtros/compra/comparação existentes por telas decorativas.
+4. **Arsenal/loadouts/campo de teste:** adicionar catálogo de armas, posse e evolução 1–5; migrar saves v2 por aeronave com a arma antiga como default. Testar custo, compatibilidade, DPS real, visual das montagens e a impossibilidade de equipar item não possuído. Só anunciar armas com comportamento implementado. Campo de teste separado da economia/campanha.
+5. **Chefes, objetos, mapas brasileiros e áudio:** primeiro implementar partes destrutíveis em um chefe existente com arma que para ao ser destruída; depois expandir Amazônia/Pantanal/Brasília/Foz com objetivos e rotas próprias. Não duplicar a fase do Rio apenas mudando cor.
+6. **Polimento e publicação de cada entrega:** build, domínio, navegador, desktop/mobile, offline e caminho do Pages. Publicação por workflow existente; confirmar deploy pelo GitHub e HTTPS quando o acesso estiver disponível. Testes em Android/Safari físico e benchmark continuam necessários antes de prometer 60 FPS nesses aparelhos.
+
+Cada entrega deve ficar jogável, com testes e commit próprios. Não avançar para uma expansão de conteúdo deixando regressões abertas na etapa atual. A entrega 1 não inclui o arsenal, os loadouts, o campo de teste ou outros mapas brasileiros.
+
+---
+
+## Plano mais amplo da Ultimate anterior (continuidade)
 
 ## Entregue nesta atualização
 

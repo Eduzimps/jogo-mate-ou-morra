@@ -5,11 +5,12 @@ const browser = await chromium.launch({
   headless: true,
   args: ["--no-sandbox"],
 });
+const baseURL = process.env.SKY_STRIKE_TEST_URL || "http://127.0.0.1:4173";
 const context = await browser.newContext();
 const page = await context.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
-await page.goto("http://127.0.0.1:4173");
+await page.goto(baseURL);
 await page.evaluate(() => navigator.serviceWorker.ready);
 await page.reload();
 await page.waitForTimeout(1000);

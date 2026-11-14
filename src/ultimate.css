@@ -1466,3 +1466,82 @@ button:active:not(:disabled) {
   letter-spacing: 0;
   margin-top: 15px;
 }
+#route-caption {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 105px;
+  z-index: 2;
+  pointer-events: none;
+  text-shadow: 0 2px 6px #000;
+  background: linear-gradient(90deg, #062330c9, transparent);
+  border-left: 2px solid #e9bd72;
+  padding: 9px 12px;
+  max-width: 350px;
+  transition: opacity 0.3s;
+}
+#route-caption:empty {
+  display: none;
+}
+#route-caption small {
+  display: block;
+  font-size: 8px;
+  color: #dfd6b6;
+  letter-spacing: 1.5px;
+}
+#route-caption strong {
+  font-family: "Barlow Condensed";
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: #f3eacf;
+  display: block;
+  margin-top: 3px;
+}
+#route-caption span {
+  font-size: 8px;
+  color: #b9ded7;
+  display: block;
+  margin-top: 5px;
+  letter-spacing: 1px;
+}
+#route-caption.landmark-caption {
+  border-left-color: #a6e4d3;
+  background: linear-gradient(90deg, #052d32cf, transparent);
+}
+@media (max-width: 700px) {
+  #route-caption {
+    left: 12px;
+    bottom: 93px;
+    padding: 7px 10px;
+    max-width: 270px;
+  }
+  #route-caption strong {
+    font-size: 20px;
+  }
+  #route-caption small {
+    font-size: 7px;
+  }
+}
+#loading {
+  padding: 30px;
+  text-align: center;
+  gap: 12px;
+  line-height: 1.5;
+}
+#loading button {
+  font-size: 11px;
+  width: 100%;
+  max-width: 290px;
+}
+#route-caption.landmark-caption {
+  top: 128px;
+  bottom: auto;
+  max-width: 300px;
+}
+@media (max-width: 700px) {
+  #route-caption.landmark-caption {
+    top: 124px;
+    bottom: auto;
+    max-width: 270px;
+  }
+}

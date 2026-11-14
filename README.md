@@ -37,6 +37,18 @@ O build fica em `dist/` e pode ser servido por qualquer hospedagem estática. N�
 
 Equipe até três dispositivos. Cada um possui recarga independente. É possível trocar a seleção no hangar. A bomba limpa tiros inimigos; o escudo bloqueia danos; o laser causa dano contínuo; os mísseis buscam alvos; a reparação recupera vida. O jogo pausa ao perder foco.
 
+## Ultimate Brazil 2.5D — Etapa 1: Operação Guanabara
+
+A missão de ID **0** agora é **Operação Guanabara**, no Rio de Janeiro. Duração, recompensa, desbloqueios e os IDs de todas as 30 missões foram preservados. As missões 1–29 continuam com seus cenários existentes. Esta entrega conclui o recorte do mapa do Rio; não implementa o arsenal customizável ou novos mapas brasileiros.
+
+A rota de 6.400 unidades é percorrida uma única vez: **oceano → costa de Copacabana → mata do Corcovado → sobrevoo do Cristo → defesa da Guanabara**. O cenário combina arte original de relevo, cidade e costa com água animada, barcos decorativos, nuvens independentes e sombras. A câmera do combate permanece fixa; apenas as camadas do cenário se deslocam. O trecho do Cristo desacelera o scroll, muda a sequência musical e suspende novas ondas para dar destaque ao marco. O chefe só entra após o sobrevoo.
+
+O Cristo é paisagem: não possui vida, arma, colisão nem recebe dano. A ilustração é uma interpretação artística, não um mapa cartográfico. Sua passagem ocorre abaixo das aeronaves, preservando os controles livres. As artes ficam em `public/assets/rio/` e somam aproximadamente **940 KiB**, em três WebP; nenhuma textura passa de 1.100px por eixo. A fase carrega esses recursos na GPU apenas quando selecionada. O service worker do build guarda as artes para permitir reabertura offline após a preparação inicial.
+
+Nenhuma alteração do formato de save foi necessária nesta etapa. Também foi corrigido um vazamento de sombras que ocorria no disparo de aeronaves com dispersão ou nível 4+: agora há uma única sombra por jogador.
+
+Validação adicional: `tests/rio-route.test.ts` verifica a linha do tempo, monotonicidade, desaceleração e sobrevoo antes do chefe; `tests/rio-browser.mjs` verifica as cinco seções renderizadas, profundidade, pausa, controles, cenário da missão seguinte, preservação de save antigo, limite de textura e regressão de alocações de sombras. Os testes de navegador avançam o tempo para tornar as transições determinísticas; isso não substitui uma revisão de balanceamento integral em celulares físicos.
+
 ## Atualização Ultimate — primeira entrega
 
 A base existente foi preservada. Esta versão contém **13 aeronaves jogáveis**, não 60. As 12 originais conservam IDs, nomes, atributos de combate, preços e níveis. Cada uma ganhou uma silhueta vetorial própria com painéis, rebites, cockpit, armamento e transparência real. O BR-29 Falcão do Brasil usa o novo ID 12, custa 650 moedas e pode ser comprado desde a primeira missão.
@@ -90,6 +102,8 @@ Os testes de domínio cobrem economia, compra duplicada, upgrades, persistência
 - `src/persistence.ts`: migração, cópias de recuperação e importação validada.
 - `src/art/aircraft.ts`: 13 silhuetas detalhadas e quatro companheiros em SVG original.
 - `src/art.ts`: acesso aos sprites, fortaleza, navio e veículos em SVG original.
+- `src/world/rioRoute.ts`: linha do tempo e deslocamento absoluto da missão do Rio.
+- `src/world/RioWorld.ts`: camadas, arte em chunks, água, nuvens e percurso do cenário.
 - `src/audio.ts`: síntese sonora e sequências musicais.
 - `src/style.css`: interface responsiva.
 - `public/sw.js`: cache offline do build.
@@ -99,4 +113,4 @@ Os testes de domínio cobrem economia, compra duplicada, upgrades, persistência
 
 O escopo completo da Ultimate ainda não foi concluído; consulte [ROADMAP.md](ROADMAP.md) para a sequência técnica. Raridade é metadado visual nesta entrega e não muda os atributos antigos; a evolução por raridade ficará na etapa de balanceamento. Não há 60 aeronaves, 100 missões, 12 companheiros, novos modos, Gamepad API ou PWA instalável nesta entrega. O offline do build está preservado.
 
-Esta é uma versão arcade funcional com arte vetorial própria, não uma reprodução da produção artística das referências. As 30 missões combinam um gerador compartilhado de ondas e seis cenários procedurais; não são 30 mapas desenhados à mão. Chefes mudam densidade e ritmo dos ataques, mas não têm componentes destrutíveis independentes. Evolução por estrelas é automática por nível; não há árvore de fusão. Gemas são recompensas de conquistas, sem loja de gemas. O desafio diário é um resgate, não uma lista renovada de objetivos. Ainda não há testes de balanceamento integral das 30 missões, benchmark de 60 FPS em celulares reais ou teste de áudio em dispositivos físicos. O build avisa sobre o tamanho do bundle do Phaser; isso não impede a compilação.
+Esta é uma versão arcade funcional com arte vetorial própria, não uma reprodução da produção artística das referências. A missão do Rio usa um percurso ilustrado próprio; as outras 29 combinam o gerador compartilhado de ondas com os cenários procedurais existentes. Não são 30 mapas desenhados à mão. Chefes mudam densidade e ritmo dos ataques, mas não têm componentes destrutíveis independentes. Evolução por estrelas é automática por nível; não há árvore de fusão. Gemas são recompensas de conquistas, sem loja de gemas. O desafio diário é um resgate, não uma lista renovada de objetivos. Ainda não há testes de balanceamento integral das 30 missões, benchmark de 60 FPS em celulares reais ou teste de áudio em dispositivos físicos. O build avisa sobre o tamanho do bundle do Phaser; isso não impede a compilação.
